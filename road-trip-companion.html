@@ -144,6 +144,33 @@
   .info.warn{background:rgba(255,159,10,.12)}
   .empty{text-align:center;color:var(--lab2);padding:60px 20px;font-size:15px}
 
+  /* journey chart */
+  .chart{background:var(--card);border-radius:18px;padding:14px 6px 8px;margin-top:12px}
+  .chart svg{display:block;overflow:visible}
+  .chart .cd{fill:#fff;font:800 11px -apple-system,sans-serif;letter-spacing:.8px}
+  .chart .cs{fill:var(--lab2);font:600 10px -apple-system,sans-serif}
+  .chart .cm{fill:var(--lab2);font:700 10px -apple-system,sans-serif}
+  .chart .cl{fill:var(--lab3);font:600 8.5px -apple-system,sans-serif}
+  .chart .ci{font-size:11px}
+  /* next milestones */
+  .ms{display:flex;align-items:center;gap:12px;background:var(--card);
+    border-radius:14px;padding:12px 14px;margin-bottom:9px}
+  .msi{width:38px;height:38px;border-radius:11px;background:var(--card2);flex:none;
+    display:flex;align-items:center;justify-content:center;font-size:19px}
+  .msb{flex:1;min-width:0}
+  .msn{font-size:15px;font-weight:700;letter-spacing:-.3px}
+  .msm{font-size:12.5px;color:var(--lab2);margin-top:2px}
+  .msd{flex:none;font-size:10px;font-weight:700;color:var(--lab3);letter-spacing:.4px}
+  .mynote{background:rgba(255,214,10,.1);border-left:3px solid var(--yellow);
+    border-radius:8px;padding:9px 11px;margin-top:10px;font-size:13.5px;color:#f0e6b8;line-height:1.45}
+  .acts a.done{background:rgba(48,209,88,.2);color:#5ee87f}
+  .card.beenthere{opacity:.62}
+  .tonight{background:var(--card);border-radius:18px;padding:15px 16px;margin-top:12px;
+    border:1px solid rgba(191,90,240,.45)}
+  .tk{font-size:11px;font-weight:800;letter-spacing:.9px;color:#d9a3f5}
+  .tv{font-size:19px;font-weight:800;letter-spacing:-.5px;margin-top:5px}
+  .tm{font-size:12.5px;color:var(--lab2);margin-top:4px;line-height:1.45}
+
   /* ---------- map ---------- */
   #map{height:calc(100vh - 150px - var(--sb));width:100%;background:var(--card);display:none}
   body.mapview #map{display:block}
@@ -229,7 +256,7 @@ const BRAND={
   ms:["M&S Food","marksandspencer.com"], waitrose:["Waitrose","waitrose.com"],
   whs:["WHSmith","whsmith.co.uk"], subway:["Subway","subway.com"],
   tesla:["Tesla","tesla.com"], gridserve:["Gridserve","gridserve.com"],
-  pi:["Premier Inn","premierinn.com"], ihg:["IHG","ihg.com"],
+  pub:["Country pub","camra.org.uk"], pi:["Premier Inn","premierinn.com"], ihg:["IHG","ihg.com"],
   hilton:["Hilton","hilton.com"], accor:["Accor","accor.com"],
   bw:["Best Western","bestwestern.co.uk"], marriott:["Marriott","marriott.com"],
   village:["Village Hotels","village-hotels.co.uk"], leonardo:["Leonardo","leonardohotels.com"],
@@ -534,6 +561,34 @@ const P = [
 {n:"GBK — Lakeside, Thurrock",c:"food",lat:51.4870,lng:0.2820,jn:"M25 J30",a:"M25",br:["gbk"],
  note:"⚠️ Closest GBK to <b>home</b>, not to the route — it's east on the M25, the opposite direction to Woolacombe. Worth knowing for a pre-trip dinner, useless on the day."},
 
+/* ================= COUNTRY PUBS — lunch, dinner, and proper veggie options ================= */
+{n:"The Plough on the Hill, Chiseldon",c:"food",pub:1,veg:2,lat:51.5230,lng:-1.7420,jn:"M4 J15",a:"Swindon",br:["pub"],
+ note:"⭐⭐ <b>A minute or two off J15</b> — the closest good pub to the motorway anywhere on the route. Singled out for having <b>lots of vegetarian and vegan options</b>, not just one token dish. Food afternoons, then 5pm–9pm."},
+{n:"Helen Browning's Royal Oak, Bishopstone",c:"food",pub:1,veg:3,lat:51.5680,lng:-1.6470,jn:"M4 J15",a:"Swindon",br:["pub"],
+ note:"⭐⭐ <b>9.3/10 — best-rated place on the whole route.</b> Organic farm pub with its own kitchen garden and Eastbrook Farm meat. The vegetable cooking is the real thing here, not an afterthought. Also has rooms (£263) if you want to stay."},
+{n:"The Bell at Ramsbury",c:"food",pub:1,veg:2,lat:51.4390,lng:-1.6090,jn:"M4 J14",a:"Newbury & Hungerford",br:["pub"],check:1,
+ note:"Well-regarded Wiltshire dining pub with its own brewery, in a pretty village 10 min from Hungerford. Reliable separate vegetarian menu. Worth ringing ahead at weekends."},
+{n:"The Pot Kiln, Frilsham",c:"food",pub:1,veg:1,lat:51.4570,lng:-1.2070,jn:"M4 J13",a:"Newbury & Hungerford",br:["pub"],
+ note:"⭐ 9.1/10, and only 1.3 mi off J13. Famous for game, so the menu leans meaty — there are vegetarian dishes but this isn't the one to pick if the veggie option matters most. Beautiful woodland setting. Rooms £320."},
+{n:"The Royal Oak, Yattendon",c:"food",pub:1,veg:2,lat:51.4650,lng:-1.1930,jn:"M4 J13",a:"Newbury & Hungerford",br:["pub"],
+ note:"8.9/10, location scored 9.4. Handsome red-brick coaching inn on a village square, 2 mi off J13. Proper kitchen, dependable veggie choices."},
+{n:"The Fox & Hounds, Wroughton",c:"food",pub:1,veg:2,lat:51.5230,lng:-1.7970,jn:"M4 J16",a:"Swindon",br:["pub"],
+ note:"8.7/10, location 9.4, and under a mile off J16. One of the easiest good-pub stops on the route."},
+{n:"The Village Inn, Liddington",c:"food",pub:1,veg:2,lat:51.5320,lng:-1.7020,jn:"M4 J15",a:"Swindon",br:["pub"],
+ note:"⭐ 1.2 mi off J15 — barely a detour. Village pub with a solid menu and rooms if you decide to stop."},
+{n:"The Three Crowns, Brinkworth",c:"food",pub:1,veg:2,lat:51.5560,lng:-1.9880,jn:"M4 J16",a:"Swindon",br:["pub"],check:1,
+ note:"Long-standing Wiltshire dining pub known for an enormous menu — which usually means a decent spread of vegetarian dishes. About 15 min from J16."},
+{n:"The White Hart, Stratton",c:"food",pub:1,veg:2,lat:51.5860,lng:-1.7500,jn:"M4 J15",a:"Swindon",br:["pub"],
+ note:"8.8/10 — highest-rated in Swindon. Roughly 10 min from the motorway on the Wanborough road."},
+{n:"The Ethicurean, Wrington",c:"food",pub:1,veg:3,lat:51.3610,lng:-2.7690,jn:"M5 J20/21",a:"Bristol",br:["pub"],check:1,
+ note:"⭐⭐ <b>The strongest vegetarian cooking anywhere near this route.</b> Restaurant in a restored Victorian walled garden in the Mendips, celebrated for vegetable-led menus. Not a quick pit stop — book ahead, and it's a proper sit-down lunch. Roughly 8 mi off the M5."},
+{n:"The Carpenters Arms, Stanton Wick",c:"food",pub:1,veg:2,lat:51.3450,lng:-2.5560,jn:"M5 J19",a:"Bristol",br:["pub"],check:1,
+ note:"Stone country inn in the Chew Valley, south of Bristol. Well-established kitchen. A detour rather than a stop, but a good one if you're breaking the M5 leg."},
+{n:"The Rock Inn, Georgeham",c:"food",pub:1,veg:2,lat:51.1450,lng:-4.1900,jn:"B3343",a:"Woolacombe",br:["pub"],
+ note:"⭐ <b>Your local once you arrive</b> — 5 minutes from Woolacombe in a thatched village. Well-rated, family-friendly, dependable vegetarian options. The obvious first-night dinner."},
+{n:"The Williams Arms, Wrafton",c:"food",pub:1,veg:1,lat:51.0930,lng:-4.1750,jn:"A361",a:"A361 North Devon",br:["pub"],check:1,
+ note:"Carvery and family pub on the A361 just before Braunton — the last easy sit-down meal before Woolacombe. Big portions, kids' menu. Veggie choice is limited to a dish or two."},
+
 /* ================= NATIONAL TRUST ================= */
 {n:"Cliveden",c:"nt",lat:51.5580,lng:-0.6890,jn:"M4 J7",a:"M4 corridor",pk:"zone",
  note:"⭐ POKÉMON ZONE — 'Pokémon joins Cliveden's Summer of Play'. Plus vast gardens, a maze and woodland play. On your way if you come down the M4 rather than the M25."},
@@ -688,6 +743,17 @@ function bookUrl(p){
 const photosUrl=p=>"https://www.google.com/search?tbm=isch&q="+encodeURIComponent(p.n+" "+(p.a||"")+" hotel");
 const logoImg=(dom,cls)=>`<img class="${cls||''}" src="https://www.google.com/s2/favicons?domain=${dom}&sz=128" alt="" loading="lazy" onerror="this.style.display='none'">`;
 const fmtD=m=>m<0.19?Math.round(m*1760)+' yd':(m<10?m.toFixed(1):Math.round(m))+' mi';
+/* Rough drive time from straight-line distance.
+   Roads wander, so ×1.25; speed rises with distance as you get onto faster roads. */
+function etaMin(mi){
+  const road=mi*1.25;
+  const mph = road<3?24 : road<10?36 : road<30?48 : 56;
+  return Math.max(1,Math.round(road/mph*60));
+}
+const fmtT=m=>m>=60?Math.floor(m/60)+'h '+(m%60)+'m':m+' min';
+const distTime=p=>`${fmtD(p.dist)} · ${fmtT(etaMin(p.dist))}`;
+/* Detour cap — anything further off the motorway than this is noise on a long drive */
+const MAX_DETOUR=20;
 
 /* ---------- map (optional) ---------- */
 let map=null,layer=null,HAS_MAP=false,meMarker=null,meAcc=null,me=null;
@@ -748,7 +814,7 @@ let filter='near',sub='all',radius=0,mapview=false;
 const SUBS={
   hotel:[['all','All 100'],['inn','Inns & gastropubs'],['chain','Chains'],['country','Country house'],['cheap','Under £150'],['close','Under 2 mi off']],
   nt:[['all','All places'],['pk','Pokémon ✦']],
-  food:[['all','Everything'],['waga','Wagamama'],['nandos',"Nando's"],['pe','PizzaExpress'],['fg','Five Guys'],['gbk','GBK']],
+  food:[['all','Everything'],['pub','🍺 Country pubs'],['veg','🌱 Good veggie'],['waga','Wagamama'],['nandos',"Nando's"],['pe','PizzaExpress'],['fg','Five Guys'],['gbk','GBK']],
   services:[['all','All stops'],['tesla','⚡ Tesla']],
   near:[['all','Everything'],['hotel','Hotels'],['services','Services'],['food','Food'],['nt','National Trust']]
 };
@@ -801,6 +867,286 @@ function buildChips(){
 }
 let sortBy='near';
 
+/* ============================================================
+   MISSION CONTROL
+   No traffic API needed — your own GPS speed IS the traffic reading.
+   If you're crawling at 12mph, every ETA below reflects that automatically.
+   ============================================================ */
+/* ============================================================
+   TRIP STATE — survives closing the app
+   Stored in localStorage, but every read/write is guarded: if storage is
+   unavailable (private browsing, restricted settings) the app still works,
+   it just forgets between sessions.
+   ============================================================ */
+const SKEY='woolacombe-trip-v1';
+const DEFAULT_STATE={tonightMi:106, tonightName:"Swindon J16", visited:{}, notes:{}};
+let STATE=Object.assign({},DEFAULT_STATE);
+try{
+  const raw=localStorage.getItem(SKEY);
+  if(raw) STATE=Object.assign({},DEFAULT_STATE,JSON.parse(raw));
+}catch(e){}
+function saveState(){
+  try{localStorage.setItem(SKEY,JSON.stringify(STATE))}catch(e){}
+}
+const key=p=>p.n;
+const dayOf=mi=>mi<=STATE.tonightMi+0.5?1:2;
+
+let fixes=[];              // recent {km, t} samples for rolling speed
+let liveMph=null;
+
+function pushFix(km,speedMps,ts){
+  const t=ts||Date.now();
+  if(speedMps!=null&&speedMps>=0&&isFinite(speedMps)){
+    liveMph=speedMps*2.23694;                     // iOS gives true speed
+  } else {
+    fixes.push({km,t});
+    if(fixes.length>6) fixes.shift();
+    if(fixes.length>=2){
+      const a=fixes[0],b=fixes[fixes.length-1];
+      const hrs=(b.t-a.t)/3600000;
+      if(hrs>0.0004) liveMph=Math.abs(b.km-a.km)/hrs; // derive from movement
+    }
+  }
+  if(liveMph!=null&&(!isFinite(liveMph)||liveMph>95)) liveMph=null;
+}
+
+function clockIn(mins){
+  const d=new Date(Date.now()+mins*60000);
+  return d.toLocaleTimeString([], {hour:'2-digit',minute:'2-digit',hour12:false});
+}
+
+/* ---------- milestones, positioned from the real route model ---------- */
+/* Milestones. Day is NOT fixed — it's recomputed from wherever you actually
+   stop for the night, so if Friday only gets you to Reading, everything past
+   Reading moves into Day 2 automatically. */
+function milestones(){
+  const at=n=>{const p=P.find(x=>x.n===n);return p?p.routeMi:null};
+  const list=[
+    {mi:0,                                 n:"South Woodford",s:"Home",i:"🏠"},
+    {mi:at("South Mimms Services"),        n:"South Mimms",s:"Mimms",i:"☕"},
+    {mi:at("Reading Services"),            n:"Reading Services",s:"Reading",i:"⚡"},
+    {mi:at("Membury Services"),            n:"Membury",s:"Membury",i:"⚡"},
+    {mi:at("Dyrham Park"),                 n:"Dyrham Park — Pokémon trail",s:"Dyrham",i:"✦"},
+    {mi:at("Gordano Services"),            n:"Gordano / past Almondsbury",s:"Gordano",i:"⚠"},
+    {mi:at("Taunton Deane Services"),      n:"Taunton Deane — last charge",s:"Taunton",i:"⚡"},
+    {mi:at("Roundswell, Barnstaple (A39)"),n:"Barnstaple",s:"B'staple",i:"🛒"},
+    {mi:TOTAL,                             n:"Woolacombe Bay",s:"Woolacombe",i:"🏖"}
+  ].filter(m=>m.mi!=null);
+  list.push({mi:STATE.tonightMi,n:STATE.tonightName+" — overnight",s:"Overnight",i:"🛏",stop:1});
+  list.sort((a,b)=>a.mi-b.mi);
+  list.forEach(m=>m.d=m.stop?1:dayOf(m.mi));
+  return list;
+}
+let MS=milestones();
+
+/* Move the overnight stop to a new point on the route and re-plan both days. */
+function setTonight(mi,name){
+  STATE.tonightMi=Math.max(1,Math.min(TOTAL-1,mi));
+  STATE.tonightName=name||'here';
+  saveState(); MS=milestones(); render();
+}
+function stopHere(id){
+  const p=P[id];
+  setTonight(p.routeMi,p.n);
+  alert('Overnight stop moved to '+p.n+'.\n\nDay 1 and Day 2 have been re-planned around it.');
+}
+function stopAtMe(){
+  if(!me)return;
+  const pr=projectOnRoute(me.lat,me.lng);
+  const nearP=[...P].sort((a,b)=>haversine(me.lat,me.lng,a.lat,a.lng)-haversine(me.lat,me.lng,b.lat,b.lng))[0];
+  setTonight(pr.km,nearP?nearP.n:'here');
+}
+function resetTrip(){
+  if(!confirm('Reset the overnight stop, all ticks and all notes?'))return;
+  STATE=Object.assign({},DEFAULT_STATE,{visited:{},notes:{}});
+  saveState(); MS=milestones(); render();
+}
+/* Type any place name — matches the 160 places in the app, and falls back to
+   your current position if you're staying somewhere I've never heard of. */
+function setTonightByName(){
+  const q=prompt(
+    "Where are you stopping tonight?\n\n"+
+    "Type a hotel or town — or leave it blank to use where you are right now.","");
+  if(q===null) return;
+  const t=q.trim();
+  if(!t){
+    if(me) stopAtMe(); else alert("Turn location on first, or type a name.");
+    return;
+  }
+  const hit=P.filter(p=>p.n.toLowerCase().includes(t.toLowerCase()))
+             .sort((a,b)=>a.n.length-b.n.length)[0];
+  if(hit){
+    setTonight(hit.routeMi,hit.n);
+    alert("Tonight: "+hit.n+"\n\nMile "+Math.round(hit.routeMi)+" of "+Math.round(TOTAL)+
+          ". Day 1 and Day 2 have been re-planned.");
+    return;
+  }
+  if(me){
+    const pr=projectOnRoute(me.lat,me.lng);
+    setTonight(pr.km,t);
+    alert('"'+t+'" isn\'t in my list, so I\'ve pinned tonight to where you are now '+
+          "(mile "+Math.round(pr.km)+"). Day 2 re-planned from there.");
+    return;
+  }
+  alert('Couldn\'t find "'+t+'" and location is off.\n\n'+
+        "Either turn location on once you're there, or open the Stay tab and tap "+
+        "🛏 Stop here on a hotel.");
+}
+
+function tonightCard(){
+  const m=STATE.tonightMi, pctOfTrip=Math.round(m/TOTAL*100);
+  return `<div class="tonight">
+    <div class="tk">TONIGHT'S STOP</div>
+    <div class="tv">🛏 ${STATE.tonightName}</div>
+    <div class="tm">Mile ${Math.round(m)} of ${Math.round(TOTAL)} · ${pctOfTrip}% of the way ·
+      splits the drive ${Math.round(m)} / ${Math.round(TOTAL-m)} miles</div>
+    <div class="acts" style="margin-top:11px">
+      <a href="#" onclick="setTonightByName();return false" class="pri">Change</a>
+      <a href="#" onclick="stopAtMe();return false">Use where I am</a>
+      <a href="#" onclick="go('hotel');return false">Pick a hotel</a>
+    </div></div>`;
+}
+
+/* --- feedback --- */
+function toggleVisited(id){
+  const k=key(P[id]);
+  if(STATE.visited[k]) delete STATE.visited[k]; else STATE.visited[k]=Date.now();
+  saveState(); render();
+}
+function addNote(id){
+  const p=P[id],k=key(p);
+  const cur=STATE.notes[k]||'';
+  const v=prompt('Your note on '+p.n+'\n(e.g. "kids loved it", "closed when we arrived", "park round the back")',cur);
+  if(v===null)return;
+  if(v.trim()) STATE.notes[k]=v.trim(); else delete STATE.notes[k];
+  saveState(); render();
+}
+
+/* ---------- the journey chart ---------- */
+function journeyChart(nowMi){
+  const D1=STATE.tonightMi, D2=TOTAL-D1;
+  const W=340, X0=14, XW=W-28;
+  const row=(day,startMi,spanMi,y,c1,c2)=>{
+    const done=Math.max(0,Math.min(spanMi,nowMi-startMi));
+    const pct=done/spanMi;
+    const here=nowMi>=startMi-0.5&&nowMi<=startMi+spanMi+0.5;
+    const x=m=>X0+((m-startMi)/spanMi)*XW;
+    const pts=MS.filter(m=>m.d===day);
+    let s=`<g>
+      <text x="${X0}" y="${y-16}" class="cd">DAY ${day}</text>
+      <text x="${X0+46}" y="${y-16}" class="cs">${day===1?'Fri · London → '+STATE.tonightName:'Sat · '+STATE.tonightName+' → Woolacombe'}</text>
+      <text x="${X0+XW}" y="${y-16}" class="cm" text-anchor="end">${Math.round(done)} / ${Math.round(spanMi)} mi</text>
+      <rect x="${X0}" y="${y}" width="${XW}" height="9" rx="4.5" fill="#2c2c2e"/>
+      <rect x="${X0}" y="${y}" width="${Math.max(0,pct*XW)}" height="9" rx="4.5" fill="url(#g${day})"/>`;
+    pts.forEach(m=>{
+      const px=x(m.mi), passed=nowMi>=m.mi-0.5;
+      s+=`<circle cx="${px}" cy="${y+4.5}" r="${passed?4.6:4}" fill="${passed?'#fff':'#1c1c1e'}" stroke="${passed?'none':'#5a5a5f'}" stroke-width="1.6"/>`;
+      s+=`<text x="${px}" y="${y+26}" class="cl" text-anchor="middle">${m.s}</text>`;
+      s+=`<text x="${px}" y="${y-4}" class="ci" text-anchor="middle">${m.i}</text>`;
+    });
+    if(here){
+      const hx=X0+pct*XW;
+      s+=`<g><line x1="${hx}" y1="${y-9}" x2="${hx}" y2="${y+18}" stroke="#fff" stroke-width="2"/>
+        <circle cx="${hx}" cy="${y+4.5}" r="7.5" fill="#fff"/>
+        <circle cx="${hx}" cy="${y+4.5}" r="7.5" fill="none" stroke="#fff" stroke-width="2" opacity=".55">
+          <animate attributeName="r" values="7.5;15;7.5" dur="2.2s" repeatCount="indefinite"/>
+          <animate attributeName="opacity" values=".55;0;.55" dur="2.2s" repeatCount="indefinite"/>
+        </circle></g>`;
+    }
+    return s+'</g>';
+  };
+  return `<div class="chart"><svg viewBox="0 0 ${W} 132" width="100%" preserveAspectRatio="xMidYMid meet">
+    <defs>
+      <linearGradient id="g1" x1="0" x2="1"><stop offset="0" stop-color="#0a84ff"/><stop offset="1" stop-color="#bf5af0"/></linearGradient>
+      <linearGradient id="g2" x1="0" x2="1"><stop offset="0" stop-color="#bf5af0"/><stop offset="1" stop-color="#ff375f"/></linearGradient>
+    </defs>
+    ${row(1,0,D1,32,'#0a84ff','#bf5af0')}
+    ${row(2,D1,D2,102,'#bf5af0','#ff375f')}
+  </svg></div>`;
+}
+
+/* ---------- next milestones ahead ---------- */
+function nextUp(nowMi,mph){
+  const ahead=MS.filter(m=>m.mi>nowMi+0.5).slice(0,3);
+  if(!ahead.length) return `<div class="info"><b>You've arrived.</b> Every milestone is behind you.</div>`;
+  return `<div class="sechead" style="margin-top:18px">Next milestones<small>at ${Math.round(mph)} mph</small></div>`+
+    ahead.map(m=>{
+      const d=m.mi-nowMi, mins=Math.round(d/mph*60);
+      return `<div class="ms">
+        <div class="msi">${m.i}</div>
+        <div class="msb"><div class="msn">${m.n}</div>
+          <div class="msm">${Math.round(d)} miles · ${fmtT(mins)} · about ${clockIn(mins)}</div></div>
+        <div class="msd">Day ${m.d}</div></div>`;
+    }).join('');
+}
+
+function missionControl(pr){
+  const doneTonight = Math.min(pr.km, STATE.tonightMi);
+  const leftTonight = Math.max(0, STATE.tonightMi - pr.km);
+  const pctTonight  = Math.round(doneTonight/STATE.tonightMi*100);
+  const leftTotal   = Math.max(0, TOTAL - pr.km);
+
+  const moving = liveMph!=null && liveMph>8;
+  const planMph = 52;                                   // used before we have a reading
+
+  /* Two different speeds, deliberately.
+     Short-range uses your true current speed — that's the honest 20-minute answer.
+     Long-range blends toward the planned average, because a jam you're sitting in
+     now will not last the remaining 200 miles. Extrapolating 12mph across the whole
+     journey produced a 17-hour ETA, which is worse than useless. */
+  const nearMph = moving ? liveMph : planMph;
+  const planningMph = moving
+    ? Math.min(68, Math.max(34, liveMph*0.35 + planMph*0.65))
+    : planMph;
+
+  const minsTonight = leftTonight>0 ? Math.round(leftTonight/planningMph*60) : 0;
+  const minsEnd     = Math.round(leftTotal/planningMph*60);
+
+  /* where 20 minutes gets you at the speed you're actually doing */
+  const in20km = pr.km + nearMph*(20/60);
+  const in20   = [...P].sort((a,b)=>Math.abs(a.routeMi-in20km)-Math.abs(b.routeMi-in20km))[0];
+  const gain20 = Math.round(nearMph*(20/60));
+
+  const speedLine = moving
+    ? `<b>${Math.round(liveMph)} mph</b> right now`
+    : `<span style="opacity:.75">not moving — figures assume ${planMph} mph</span>`;
+
+  return `
+  <div class="status">
+    <div style="display:flex;align-items:baseline;gap:8px">
+      <div class="pc">${Math.round(leftTonight>0?leftTonight:leftTotal)}</div>
+      <div style="font-size:15px;font-weight:700;opacity:.9">miles to ${leftTonight>0?STATE.tonightName:'Woolacombe'}</div>
+    </div>
+    <div class="sub">${leftTonight>0
+        ? `Arriving about <b>${clockIn(minsTonight)}</b> · ${fmtT(minsTonight)} to go · ${speedLine}`
+        : `Tonight's leg done. ${Math.round(leftTotal)} miles left tomorrow · ${speedLine}`}</div>
+    <div class="bar"><i style="width:${pctTonight}%"></i></div>
+    <div style="display:flex;justify-content:space-between;font-size:11px;margin-top:6px;opacity:.85">
+      <span>South Woodford</span><span>${pctTonight}% of tonight</span><span>Swindon</span>
+    </div>
+  </div>
+
+  <div class="quads">
+    <div class="quad"><div class="k">In 20 minutes</div>
+      <div class="v">+${gain20} miles</div>
+      <div class="m">around ${in20?in20.n:'—'}</div></div>
+    <div class="quad"><div class="k">Woolacombe ETA</div>
+      <div class="v">${leftTotal<1?'Arrived':clockIn(minsEnd)}</div>
+      <div class="m">${Math.round(leftTotal)} mi · ${fmtT(minsEnd)} driving</div></div>
+  </div>
+
+  ${journeyChart(pr.km)}
+  ${tonightCard()}
+  ${nextUp(pr.km,planningMph)}
+
+  <a class="quad" style="display:block;margin-top:12px;text-align:center"
+     href="https://www.google.com/maps/dir/?api=1&origin=${me.lat},${me.lng}&destination=51.1710,-4.2080&travelmode=driving"
+     target="_blank" rel="noopener">
+    <div class="k">Live traffic</div>
+    <div class="v" style="color:var(--blue)">Open this route in Google Maps ↗</div>
+    <div class="m">for real-time delays and rerouting</div></a>`;
+}
+
 /* ---------- location ---------- */
 let watchId=null,locErr=null;
 function setLocLabel(txt,on){loclabel.textContent=txt;locbtn.classList.toggle('on',!!on)}
@@ -815,14 +1161,17 @@ locbtn.onclick=()=>{
   if(!navigator.geolocation){locErr='This browser has no location support.';render();return}
   setLocLabel('Finding…',false);
   watchId=navigator.geolocation.watchPosition(
-    pos=>{locErr=null;setMe(pos.coords.latitude,pos.coords.longitude,pos.coords.accuracy);setLocLabel('Live',true)},
+    pos=>{locErr=null;
+      setMe(pos.coords.latitude,pos.coords.longitude,pos.coords.accuracy,pos.coords.speed,pos.timestamp);
+      setLocLabel(liveMph!=null&&liveMph>3?Math.round(liveMph)+' mph':'Live',true)},
     err=>{watchId=null;setLocLabel('Locate me',false);
       locErr='Couldn’t get your location — '+err.message+'. If you opened this as a file rather than a web link, iOS blocks GPS. Open the hosted link instead, or long-press the map to drop your position by hand.';
       render()},
     {enableHighAccuracy:true,maximumAge:10000,timeout:12000});
 };
-function setMe(lat,lng,acc){
+function setMe(lat,lng,acc,speedMps,ts){
   me={lat,lng};
+  pushFix(projectOnRoute(lat,lng).km,speedMps,ts);
   if(HAS_MAP&&map){
     if(!meMarker){meMarker=L.marker([lat,lng],{icon:L.divIcon({className:'',iconSize:[18,18],iconAnchor:[9,9],
       html:'<div class="me" style="width:18px;height:18px"></div>'}),zIndexOffset:1000}).addTo(map);map.setView([lat,lng],10)}
@@ -849,7 +1198,10 @@ function photoBlock(p){
 function card(p){
   const ph=!!photoOf(p);
   const t=[];
-  if(p.dist!=null) t.push(`<span class="dist">${fmtD(p.dist)}</span>`);
+  if(p.dist!=null) t.push(`<span class="dist">${distTime(p)}</span>`);
+  if(p.veg>=3) t.push('<span class="tag" style="background:rgba(48,209,88,.18);color:#5ee87f">🌱 excellent veggie</span>');
+  else if(p.veg===2) t.push('<span class="tag" style="background:rgba(48,209,88,.13);color:#5ee87f">🌱 good veggie</span>');
+  else if(p.veg===1) t.push('<span class="tag warn">🌱 limited veggie</span>');
   if(p.ahead!=null){
     t.push(p.ahead>2
       ? `<span class="tag hi">${Math.round(p.ahead)} mi ahead</span>`
@@ -874,7 +1226,7 @@ function card(p){
     return o.length?`<div class="brands">${o.join('')}</div>`:'';
   })();
 
-  return `<div class="card${ph?' hasphoto':''}">
+  return `<div class="card${ph?' hasphoto':''}${STATE.visited[key(p)]?' beenthere':''}">
     ${photoBlock(p)}
     <div class="body">
       ${ph?'':''}
@@ -886,10 +1238,17 @@ function card(p){
       <div class="note">${p.note}</div>
       ${p.teslaN?`<div class="note" style="color:#ff8078">⚡ ${p.teslaN}</div>`:''}
       ${brands}
+      ${STATE.notes[key(p)]?`<div class="mynote">📝 ${STATE.notes[key(p)].replace(/</g,'&lt;')}</div>`:''}
       <div class="acts">
         <a href="${mapsUrl(p)}" target="_blank" rel="noopener">Directions</a>
         ${p.c==='hotel'?`<a href="${photosUrl(p)}" target="_blank" rel="noopener">Photos</a>`:''}
         <a class="pri" href="${bookUrl(p)}" target="_blank" rel="noopener">${p.c==='hotel'?(p.soldout?'Recheck':'Book'):'Info'}</a>
+      </div>
+      <div class="acts">
+        <a href="#" onclick="toggleVisited(${p.id});return false"
+           class="${STATE.visited[key(p)]?'done':''}">${STATE.visited[key(p)]?'✓ Been there':'Mark as done'}</a>
+        <a href="#" onclick="addNote(${p.id});return false">${STATE.notes[key(p)]?'Edit note':'Add note'}</a>
+        ${p.c==='hotel'?`<a href="#" onclick="stopHere(${p.id});return false">🛏 Stop here</a>`:''}
       </div>
     </div></div>`;
 }
@@ -901,7 +1260,10 @@ function nearScreen(){
     h+=`<div class="status idle"><div class="pc">Where are you?</div>
       <div class="sub" style="color:var(--lab2)">Tap <b style="color:#fff">Locate me</b> at the top and this becomes a live list of everything around you, closest first.</div></div>`;
     if(locErr) h+=`<div class="info warn">${locErr}</div>`;
-    h+=`<div class="info">Until then, here's the route in order. Switch tabs below for hotels, food and National Trust places.</div>`;
+    h+=journeyChart(0);
+    h+=tonightCard();
+    h+=nextUp(0,52);
+    h+=`<div class="info">Those timings assume 52 mph. Turn on location and they'll recalculate from the speed you're actually doing.</div>`;
     const items=[...P].sort((a,b)=>a.routeMi-b.routeMi).slice(0,25);
     h+='<div class="sechead">First stops on the route</div>';
     items.forEach(p=>h+=card(p));
@@ -916,22 +1278,29 @@ function nearScreen(){
     h+=`<div class="status idle"><div class="pc">Off the planned route</div>
       <div class="sub" style="color:var(--lab2)">You're about ${Math.round(pr.d)} miles from the M4/M5 line. Distances below are still accurate.</div></div>`;
   } else {
-    h+=`<div class="status"><div class="pc">${pct}%</div>
-      <div class="sub">${Math.round(pr.km)} miles done · <b>${left} to Woolacombe</b></div>
-      <div class="bar"><i style="width:${pct}%"></i></div></div>`;
+    h+=missionControl(pr);
   }
 
-  const nearest=c=>[...P].filter(p=>p.c===c&&!p.soldout).sort((a,b)=>a.dist-b.dist)[0];
-  const ahead=[...P].filter(p=>p.routeMi>pr.km-1&&p.c==='services').sort((a,b)=>a.routeMi-b.routeMi)[0];
-  const charge=[...P].filter(p=>p.tesla===1&&p.routeMi>pr.km-1).sort((a,b)=>a.routeMi-b.routeMi)[0];
-  const q=(k,p,extra)=>p?`<a class="quad" href="${mapsUrl(p)}" target="_blank"><div class="k">${k}</div>
-      <div class="v">${p.n}</div><div class="m">${fmtD(p.dist)} away${extra?' · '+extra:''}</div></a>`
-    :`<div class="quad"><div class="k">${k}</div><div class="v" style="color:var(--lab2)">none ahead</div></div>`;
+  /* --- what's nearest right now, in miles AND minutes --- */
+  const near=(fn)=>[...P].filter(fn).sort((a,b)=>a.dist-b.dist)[0];
+  const svc   = near(p=>p.c==='services');
+  const hotel = near(p=>p.c==='hotel'&&!p.soldout&&p.detour<=MAX_DETOUR);
+  const waga  = near(p=>(p.br||[]).includes('waga')||(p.br||[]).includes('gbk'));
+  const pub   = near(p=>p.pub&&p.veg>=2);
+  const charge= near(p=>p.tesla===1);
+
+  const q=(k,p,extra)=>p
+    ? `<a class="quad" href="${mapsUrl(p)}" target="_blank"><div class="k">${k}</div>
+       <div class="v">${p.n}</div><div class="m">${distTime(p)}${extra?' · '+extra:''}${p.ahead>2?' · ahead':p.ahead<-2?' · behind you':''}</div></a>`
+    : `<div class="quad"><div class="k">${k}</div><div class="v" style="color:var(--lab2)">none in list</div></div>`;
+
   h+=`<div class="quads">
-    ${q('Next services',ahead)}
-    ${q('Next Tesla charge',charge)}
-    ${q('Nearest hotel',nearest('hotel'),nearest('hotel')?'£'+nearest('hotel').p:'')}
-    ${q('Nearest food',nearest('food'))}
+    ${q('Nearest services',svc)}
+    ${q('Nearest Tesla charge',charge)}
+    ${q('Nearest hotel',hotel,hotel?'£'+hotel.p:'')}
+    ${q('Nearest Wagamama / GBK',waga)}
+    ${q('Nearest good veggie pub',pub)}
+    ${q('Nearest anything',near(p=>true))}
   </div>`;
 
   let items=[...P].filter(p=>sub==='all'||p.c===sub).sort((a,b)=>a.dist-b.dist);
@@ -965,6 +1334,8 @@ function planScreen(){
     <div class="tot"><b>250</b><span>MILES</span></div>
     <div class="tot"><b>${Math.floor(drive/60)}h${String(drive%60).padStart(2,'0')}</b><span>DRIVING</span></div>
     <div class="tot"><b>2</b><span>DAYS</span></div></div>`;
+  h+=journeyChart(me?projectOnRoute(me.lat,me.lng).km:0);
+  h+=tonightCard();
   h+=`<div class="info">Leaving South Woodford at <b>18:00 Friday</b>. Two easy legs rather than one hard one — 120 miles on Friday evening, Dyrham Park mid-morning Saturday, into Woolacombe around 4pm.</div>`;
   ITIN.forEach((x,i)=>{
     if(x.day){h+=`<div class="daybar"><b>${x.day}</b><small>${x.sub}</small></div>`;return}
@@ -985,8 +1356,12 @@ function planScreen(){
 /* ---------- LIST SCREENS ---------- */
 function listScreen(){
   let items=P.filter(p=>p.c===filter);
+  /* Food and hotels: never show anything more than MAX_DETOUR off the route */
+  if(filter==='food'||filter==='hotel') items=items.filter(p=>p.detour<=MAX_DETOUR);
   if(sub!=='all'){
-    if(filter==='hotel'){
+    if(filter==='food'&&sub==='pub') items=items.filter(p=>p.pub);
+    else if(filter==='food'&&sub==='veg') items=items.filter(p=>p.veg>=2);
+    else if(filter==='hotel'){
       if(sub==='cheap')items=items.filter(p=>p.p&&p.p<150);
       else if(sub==='close')items=items.filter(p=>p.detour<=2);
       else items=items.filter(p=>p.st===sub);
