@@ -231,6 +231,18 @@ window.onerror=function(msg,src,line){
 };
 </script>
 <script>
+/* ================================================================
+   ▼▼▼  PUT YOUR GOOGLE MAPS API KEY ON THE NEXT LINE  ▼▼▼
+   Replace PASTE_YOUR_KEY_HERE with the key, keeping the quotes.
+   Leave it exactly as it is and the app works as it does today —
+   the Google features simply stay switched off.
+   ================================================================ */
+const GMAPS_KEY = "PASTE_YOUR_KEY_HERE";
+/* ================================================================
+   ▲▲▲  THAT'S THE ONLY LINE YOU NEED TO CHANGE  ▲▲▲
+   ================================================================ */
+const GKEY_ON = GMAPS_KEY && GMAPS_KEY !== "PASTE_YOUR_KEY_HERE" && GMAPS_KEY.length > 20;
+
 /* ---------- route: South Woodford -> M11 -> M25 -> M4 -> M5 -> A361 -> Woolacombe ---------- */
 const ROUTE = [
  [51.5910,0.0290],[51.6180,0.0430],[51.6870,0.0770],[51.6930,-0.0350],[51.6960,-0.2280],
@@ -678,7 +690,73 @@ const PHOTO={
 "Knightshayes, Tiverton":NTB+"devon/places/knightshayes/library/summer/1295005-web-crop.jpg",
 "Baggy Point, Croyde":NTB+"devon/places/baggy-point/library/autumn/beach-sea-sun-baggy-point-devon-1204403.jpg"
 };
-const photoOf=(p,w)=>PHOTO[p.n]?PHOTO[p.n]+"?auto=webp&width="+(w||700):null;
+/* Google Places photos, fetched only if a key is present.
+   Results are cached permanently so each hotel costs one lookup, ever. */
+let GPHOTO={};
+try{ GPHOTO=JSON.parse(localStorage.getItem('gphoto-v1')||'{}') }catch(e){}
+const saveGPhoto=()=>{try{localStorage.setItem('gphoto-v1',JSON.stringify(GPHOTO))}catch(e){}};
+
+let photoQueue=[], photoBusy=false;
+async function fetchPhoto(p){
+  if(!GKEY_ON||GPHOTO[p.n]!==undefined) return;
+  GPHOTO[p.n]=null;                                   // mark as tried, avoid loops
+  try{
+    const r=await fetch('https://places.googleapis.com/v1/places:searchText',{
+      method:'POST',
+      headers:{'Content-Type':'application/json','X-Goog-Api-Key':GMAPS_KEY,
+               'X-Goog-FieldMask':'places.photos,places.displayName'},
+      body:JSON.stringify({textQuery:p.n+' '+(p.a||'')+' UK',maxResultCount:1})
+    });
+    if(!r.ok) throw new Error('HTTP '+r.status);
+    const j=await r.json();
+    const nm=j.places&&j.places[0]&&j.places[0].photos&&j.places[0].photos[0]&&j.places[0].photos[0].name;
+    if(nm) GPHOTO[p.n]='https://places.googleapis.com/v1/'+nm+'/media?maxWidthPx=800&key='+GMAPS_KEY;
+  }catch(e){ /* quota, bad key, offline — stay silent, card keeps its logo */ }
+  saveGPhoto();
+}
+async function drainPhotoQueue(){
+  if(photoBusy||!GKEY_ON) return;
+  photoBusy=true;
+  while(photoQueue.length){
+    const p=photoQueue.shift();
+    await fetchPhoto(p);
+    await new Promise(r=>setTimeout(r,250));          // gentle on the quota
+  }
+  photoBusy=false;
+  render();
+}
+
+const photoOf=(p,w)=>{
+  if(GPHOTO[p.n]) return GPHOTO[p.n];
+  return PHOTO[p.n]?PHOTO[p.n]+"?auto=webp&width="+(w||700):null;
+};
+
+/* Live-traffic ETA from the Routes API. Throttled to one call every 5 minutes
+   per destination, so a five-hour drive costs about 60 calls against a 100/day cap. */
+const GETA={};
+async function trafficEta(destLat,destLng,tag){
+  if(!GKEY_ON||!me) return null;
+  const now=Date.now(), c=GETA[tag];
+  if(c && now-c.t < 300000) return c.mins;
+  GETA[tag]={t:now,mins:c?c.mins:null};
+  try{
+    const r=await fetch('https://routes.googleapis.com/directions/v2:computeRoutes',{
+      method:'POST',
+      headers:{'Content-Type':'application/json','X-Goog-Api-Key':GMAPS_KEY,
+               'X-Goog-FieldMask':'routes.duration,routes.distanceMeters'},
+      body:JSON.stringify({
+        origin:{location:{latLng:{latitude:me.lat,longitude:me.lng}}},
+        destination:{location:{latLng:{latitude:destLat,longitude:destLng}}},
+        travelMode:'DRIVE', routingPreference:'TRAFFIC_AWARE'})
+    });
+    if(!r.ok) throw new Error('HTTP '+r.status);
+    const j=await r.json();
+    const s=j.routes&&j.routes[0]&&j.routes[0].duration;
+    if(s){ GETA[tag]={t:now,mins:Math.round(parseInt(s)/60), mi:(j.routes[0].distanceMeters/1609.34)};
+           render(); }
+  }catch(e){ /* fall back to the built-in profile */ }
+  return GETA[tag].mins;
+}
 
 /* ---------- geo ---------- */
 const R=6371, MI=0.621371, rad=d=>d*Math.PI/180;
@@ -743,11 +821,40 @@ function bookUrl(p){
 const photosUrl=p=>"https://www.google.com/search?tbm=isch&q="+encodeURIComponent(p.n+" "+(p.a||"")+" hotel");
 const logoImg=(dom,cls)=>`<img class="${cls||''}" src="https://www.google.com/s2/favicons?domain=${dom}&sz=128" alt="" loading="lazy" onerror="this.style.display='none'">`;
 const fmtD=m=>m<0.19?Math.round(m*1760)+' yd':(m<10?m.toFixed(1):Math.round(m))+' mi';
-/* Rough drive time from straight-line distance.
-   Roads wander, so ×1.25; speed rises with distance as you get onto faster roads. */
+/* ============================================================
+   SPEED PROFILE along the route.
+   A flat average is badly wrong: the M25 orbital and the M5 are not
+   the same road. These figures are calibrated against real Google
+   Maps times — e.g. South Woodford → South Mimms is 20 model miles
+   and takes 33 min, i.e. 36 mph, NOT the 52 mph I first assumed.
+   ============================================================ */
+const SPEED=[
+  {to:25,  mph:36, why:"M11 + M25 orbital"},
+  {to:70,  mph:50, why:"M25 west, M4 to Reading"},
+  {to:110, mph:58, why:"M4 open running"},
+  {to:148, mph:46, why:"M4 J18 → Almondsbury → M5"},
+  {to:195, mph:58, why:"M5 south"},
+  {to:228, mph:44, why:"A361 North Devon Link Road"},
+  {to:1e9, mph:30, why:"Barnstaple and the coast lanes"}
+];
+const speedAt=mi=>(SPEED.find(s=>mi<s.to)||SPEED[SPEED.length-1]).mph;
+
+/* Minutes to travel between two points on the route, integrating the profile. */
+function travelMins(a,b){
+  if(b<=a) return 0;
+  let mins=0, x=a;
+  for(const s of SPEED){
+    if(x>=b) break;
+    const seg=Math.min(b,s.to)-x;
+    if(seg>0){ mins+=seg/s.mph*60; x+=seg; }
+  }
+  return Math.round(mins);
+}
+
+/* Drive time to somewhere OFF the route (crow-flies), for the place cards. */
 function etaMin(mi){
-  const road=mi*1.25;
-  const mph = road<3?24 : road<10?36 : road<30?48 : 56;
+  const road=mi*1.3;
+  const mph = road<3?22 : road<10?32 : road<30?44 : 52;
   return Math.max(1,Math.round(road/mph*60));
 }
 const fmtT=m=>m>=60?Math.floor(m/60)+'h '+(m%60)+'m':m+' min';
@@ -1066,12 +1173,26 @@ function journeyChart(nowMi){
 }
 
 /* ---------- next milestones ahead ---------- */
+/* ETA along the route, using the profile, with your live speed dominating
+   the next 12 miles — because a jam you're in now affects the next junction,
+   not the whole of Somerset. */
+function routeEta(fromMi,toMi){
+  const base=travelMins(fromMi,toMi);
+  if(!(liveMph!=null&&liveMph>8)) return base;
+  const local=speedAt(fromMi);
+  const ratio=Math.min(2.6,Math.max(0.45,local/liveMph));
+  const nearEnd=Math.min(toMi,fromMi+12);
+  return Math.round(travelMins(fromMi,nearEnd)*ratio + travelMins(nearEnd,toMi));
+}
+
 function nextUp(nowMi,mph){
   const ahead=MS.filter(m=>m.mi>nowMi+0.5).slice(0,3);
   if(!ahead.length) return `<div class="info"><b>You've arrived.</b> Every milestone is behind you.</div>`;
-  return `<div class="sechead" style="margin-top:18px">Next milestones<small>at ${Math.round(mph)} mph</small></div>`+
+  const seg=SPEED.find(s=>nowMi<s.to)||SPEED[SPEED.length-1];
+  return `<div class="sechead" style="margin-top:18px">Next milestones<small>${
+    liveMph!=null&&liveMph>8?'from your live speed of '+Math.round(liveMph)+' mph':'typical '+seg.mph+' mph on the '+seg.why}</small></div>`+
     ahead.map(m=>{
-      const d=m.mi-nowMi, mins=Math.round(d/mph*60);
+      const d=m.mi-nowMi, mins=routeEta(nowMi,m.mi);
       return `<div class="ms">
         <div class="msi">${m.i}</div>
         <div class="msb"><div class="msn">${m.n}</div>
@@ -1094,22 +1215,28 @@ function missionControl(pr){
      Long-range blends toward the planned average, because a jam you're sitting in
      now will not last the remaining 200 miles. Extrapolating 12mph across the whole
      journey produced a 17-hour ETA, which is worse than useless. */
-  const nearMph = moving ? liveMph : planMph;
-  const planningMph = moving
-    ? Math.min(68, Math.max(34, liveMph*0.35 + planMph*0.65))
-    : planMph;
+  const nearMph = moving ? liveMph : speedAt(pr.km);
+  const planningMph = moving ? liveMph : speedAt(pr.km);
 
-  const minsTonight = leftTonight>0 ? Math.round(leftTonight/planningMph*60) : 0;
-  const minsEnd     = Math.round(leftTotal/planningMph*60);
+  /* Both ETAs now integrate the calibrated speed profile rather than
+     dividing by one optimistic average. */
+  let minsTonight = leftTonight>0 ? routeEta(pr.km, STATE.tonightMi) : 0;
+  let minsEnd     = routeEta(pr.km, TOTAL);
+  let src='';
+  if(GKEY_ON){
+    trafficEta(ROUTE[ROUTE.length-1][0],ROUTE[ROUTE.length-1][1],'end');
+    if(GETA.end&&GETA.end.mins){ minsEnd=GETA.end.mins; src=' · live traffic'; }
+  }
 
   /* where 20 minutes gets you at the speed you're actually doing */
   const in20km = pr.km + nearMph*(20/60);
   const in20   = [...P].sort((a,b)=>Math.abs(a.routeMi-in20km)-Math.abs(b.routeMi-in20km))[0];
   const gain20 = Math.round(nearMph*(20/60));
 
+  const seg=SPEED.find(s=>pr.km<s.to)||SPEED[SPEED.length-1];
   const speedLine = moving
     ? `<b>${Math.round(liveMph)} mph</b> right now`
-    : `<span style="opacity:.75">not moving — figures assume ${planMph} mph</span>`;
+    : `<span style="opacity:.75">typical ${seg.mph} mph here — ${seg.why}</span>`;
 
   return `
   <div class="status">
@@ -1130,9 +1257,9 @@ function missionControl(pr){
     <div class="quad"><div class="k">In 20 minutes</div>
       <div class="v">+${gain20} miles</div>
       <div class="m">around ${in20?in20.n:'—'}</div></div>
-    <div class="quad"><div class="k">Woolacombe ETA</div>
+    <div class="quad"><div class="k">Woolacombe ETA${src?' ⚡':''}</div>
       <div class="v">${leftTotal<1?'Arrived':clockIn(minsEnd)}</div>
-      <div class="m">${Math.round(leftTotal)} mi · ${fmtT(minsEnd)} driving</div></div>
+      <div class="m">${Math.round(leftTotal)} mi · ${fmtT(minsEnd)} driving${src}</div></div>
   </div>
 
   ${journeyChart(pr.km)}
@@ -1262,7 +1389,7 @@ function nearScreen(){
     if(locErr) h+=`<div class="info warn">${locErr}</div>`;
     h+=journeyChart(0);
     h+=tonightCard();
-    h+=nextUp(0,52);
+    h+=nextUp(0,speedAt(0));
     h+=`<div class="info">Those timings assume 52 mph. Turn on location and they'll recalculate from the speed you're actually doing.</div>`;
     const items=[...P].sort((a,b)=>a.routeMi-b.routeMi).slice(0,25);
     h+='<div class="sechead">First stops on the route</div>';
@@ -1401,6 +1528,14 @@ function render(){
   listEl.innerHTML=h;
   /* photo cards: name lives in the caption, so blank the duplicate */
   [...listEl.querySelectorAll('.card.hasphoto .crow .cname')].forEach(e=>e.remove());
+  /* queue up Google photos for hotels on screen that don't have one yet */
+  if(GKEY_ON&&(filter==='hotel'||filter==='near')){
+    const want=P.filter(p=>p.c==='hotel'&&GPHOTO[p.n]===undefined&&!p.soldout)
+                .sort((a,b)=>(a.dist!=null?a.dist:a.routeMi)-(b.dist!=null?b.dist:b.routeMi))
+                .slice(0,8);
+    want.forEach(p=>{if(!photoQueue.includes(p))photoQueue.push(p)});
+    drainPhotoQueue();
+  }
 }
 function focusOn(id){const p=P[id];window.open(mapsUrl(p),'_blank')}
 
