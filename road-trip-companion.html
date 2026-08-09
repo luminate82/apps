@@ -237,7 +237,7 @@ window.onerror=function(msg,src,line){
    Leave it exactly as it is and the app works as it does today —
    the Google features simply stay switched off.
    ================================================================ */
-const GMAPS_KEY = "AIzaSyBXXEWW09mHr4IDcj-LDuLXcCmdOYEHViM";
+const GMAPS_KEY = "PASTE_YOUR_KEY_HERE";
 /* ================================================================
    ▲▲▲  THAT'S THE ONLY LINE YOU NEED TO CHANGE  ▲▲▲
    ================================================================ */
@@ -1208,7 +1208,6 @@ function missionControl(pr){
   const leftTotal   = Math.max(0, TOTAL - pr.km);
 
   const moving = liveMph!=null && liveMph>8;
-  const planMph = 52;                                   // used before we have a reading
 
   /* Two different speeds, deliberately.
      Short-range uses your true current speed — that's the honest 20-minute answer.
@@ -1390,7 +1389,11 @@ function nearScreen(){
     h+=journeyChart(0);
     h+=tonightCard();
     h+=nextUp(0,speedAt(0));
-    h+=`<div class="info">Those timings assume 52 mph. Turn on location and they'll recalculate from the speed you're actually doing.</div>`;
+    h+=`<div class="info">Those timings come from a speed profile calibrated against real
+      Google Maps times — <b>${SPEED[0].mph} mph</b> on the ${SPEED[0].why},
+      ${SPEED[2].mph} on the open M4, ${SPEED[SPEED.length-1].mph} on the Devon lanes.
+      Turn on location and they'll adjust to the speed you're actually doing${
+        GKEY_ON?', with Google live traffic refining the arrival time':''}.</div>`;
     const items=[...P].sort((a,b)=>a.routeMi-b.routeMi).slice(0,25);
     h+='<div class="sechead">First stops on the route</div>';
     items.forEach(p=>h+=card(p));
@@ -1477,7 +1480,97 @@ function planScreen(){
   h+=`<div class="info warn"><b>Two alternatives if the M5 worries you.</b><br><br>
     <b>Go late:</b> reach Dyrham at 13:30, trail until 16:30, drive once the M5 clears after 16:00 — Woolacombe about 19:00.<br><br>
     <b>Go early:</b> leave at 07:30 and you're there by 11:00 with a clear run — but you'd lose Dyrham Park entirely.</div>`;
+  h+=apiPanel();
   return h;
+}
+
+/* ---------- Google API self-test ---------- */
+function apiPanel(){
+  const origin=(location.origin||'file://')+'/*';
+  return `<div class="sechead" style="margin-top:22px">Google Maps API<small>${
+    GKEY_ON?'A key is installed':'No key installed — the app runs on its built-in estimates'}</small></div>
+  <div class="info">
+    <b>Status:</b> ${GKEY_ON?'🟡 Key present, not yet tested':'⚪️ Not configured'}<br>
+    <b>This page's address:</b> <code>${origin}</code><br>
+    <span style="font-size:12px">Your key's website restriction must match that exactly.</span>
+  </div>
+  <div class="acts"><a class="pri" href="#" onclick="runApiTest();return false">Test the key now</a></div>
+  <div id="apiout"></div>`;
+}
+
+function apiSay(html){
+  const el=document.getElementById('apiout');
+  if(el) el.innerHTML=html;
+}
+function explain(status,body){
+  const b=(body||'').slice(0,300);
+  if(status===403 && /referer|referrer|API_KEY_HTTP_REFERRER/i.test(b))
+    return "Your key is locked to a different website. Add <code>"+(location.origin)+"/*</code> to the key's Website restrictions.";
+  if(status===403 && /not enabled|SERVICE_DISABLED|disabled/i.test(b))
+    return "That API isn't switched on. Go to the Maps API Library and click Enable on it.";
+  if(status===403) return "Key rejected. Usually either the API isn't enabled, or the website restriction doesn't include this address.";
+  if(status===429 || /RESOURCE_EXHAUSTED|quota/i.test(b))
+    return "Daily quota reached. That's your spending cap doing its job — it resets tomorrow.";
+  if(status===400) return "Request refused. The key may be mistyped, or have a stray space or quote.";
+  return "Unexpected response ("+status+").";
+}
+
+async function runApiTest(){
+  if(!GKEY_ON){
+    apiSay(`<div class="info warn"><b>No key installed.</b><br>
+      Edit the line <code>const GMAPS_KEY = "PASTE_YOUR_KEY_HERE";</code> near the top of this file.</div>`);
+    return;
+  }
+  apiSay('<div class="info">Testing…</div>');
+  let out='';
+
+  /* 1. Places — the hotel photos */
+  try{
+    const r=await fetch('https://places.googleapis.com/v1/places:searchText',{
+      method:'POST',
+      headers:{'Content-Type':'application/json','X-Goog-Api-Key':GMAPS_KEY,
+               'X-Goog-FieldMask':'places.photos,places.displayName'},
+      body:JSON.stringify({textQuery:'Premier Inn Swindon West UK',maxResultCount:1})
+    });
+    const t=await r.text();
+    if(r.ok){
+      const j=JSON.parse(t);
+      const got=j.places&&j.places[0];
+      const pics=got&&got.photos?got.photos.length:0;
+      out+=`<div class="info"><b>✅ Places API working</b><br>Found "${got?got.displayName.text:'?'}" with ${pics} photo${pics===1?'':'s'}. Hotel photos will appear.</div>`;
+    } else out+=`<div class="info warn"><b>❌ Places API failed (${r.status})</b><br>${explain(r.status,t)}</div>`;
+  }catch(e){
+    out+=`<div class="info warn"><b>❌ Places API — couldn't reach Google</b><br>No internet, or the request was blocked.</div>`;
+  }
+
+  /* 2. Routes — the live traffic ETA */
+  try{
+    const o=me||{lat:51.5910,lng:0.0290};
+    const r=await fetch('https://routes.googleapis.com/directions/v2:computeRoutes',{
+      method:'POST',
+      headers:{'Content-Type':'application/json','X-Goog-Api-Key':GMAPS_KEY,
+               'X-Goog-FieldMask':'routes.duration,routes.distanceMeters'},
+      body:JSON.stringify({
+        origin:{location:{latLng:{latitude:o.lat,longitude:o.lng}}},
+        destination:{location:{latLng:{latitude:51.1710,longitude:-4.2080}}},
+        travelMode:'DRIVE',routingPreference:'TRAFFIC_AWARE'})
+    });
+    const t=await r.text();
+    if(r.ok){
+      const j=JSON.parse(t);
+      const d=j.routes&&j.routes[0];
+      const mins=d?Math.round(parseInt(d.duration)/60):0;
+      const mi=d?(d.distanceMeters/1609.34).toFixed(0):'?';
+      out+=`<div class="info"><b>✅ Routes API working</b><br>
+        Google says ${mi} miles to Woolacombe, ${fmtT(mins)} <b>with current traffic</b>.<br>
+        <span style="font-size:12px">My built-in estimate: ${Math.round(TOTAL)} mi, ${fmtT(travelMins(0,TOTAL))}.</span></div>`;
+    } else out+=`<div class="info warn"><b>❌ Routes API failed (${r.status})</b><br>${explain(r.status,t)}</div>`;
+  }catch(e){
+    out+=`<div class="info warn"><b>❌ Routes API — couldn't reach Google</b><br>No internet, or the request was blocked.</div>`;
+  }
+
+  out+=`<div class="info" style="font-size:12px">Every one of these is safe to fail — the app falls back to its own estimates and carries on.</div>`;
+  apiSay(out);
 }
 
 /* ---------- LIST SCREENS ---------- */
