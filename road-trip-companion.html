@@ -780,10 +780,23 @@ async function drainPhotoQueue(){
     await new Promise(r=>setTimeout(r,250));          // gentle on the quota
   }
   photoBusy=false;
-  if(landed){                                         // one debounced repaint
-    clearTimeout(photoTimer);
-    photoTimer=setTimeout(()=>render(),400);
-  }
+  if(landed) patchPhotos();   // swap images into the existing cards — no re-render, no flicker
+}
+
+/* Upgrade on-screen logo cards to photos in place. Everything already
+   rendered stays untouched, so nothing blinks. */
+function patchPhotos(){
+  try{
+    document.querySelectorAll('.fallback[data-pid]').forEach(el=>{
+      const p=P[+el.getAttribute('data-pid')];
+      if(!p||!GPHOTO[p.n]) return;
+      const card=el.closest('.card');
+      el.outerHTML=`<div class="photo" data-pid="${p.id}">
+        <img src="${GPHOTO[p.n]}" alt="" loading="lazy" decoding="async" onerror="this.parentNode.style.display='none'">
+        <div class="grad"></div><div class="cap">${p.n}</div></div>`;
+      if(card) card.classList.add('hasphoto');
+    });
+  }catch(e){}
 }
 
 const photoOf=(p,w)=>{
@@ -965,7 +978,7 @@ const ICON={
  nt:'<path d="M12 3l9 5v2h-2v8h2v3H3v-3h2V10H3V8l9-5zm-5 7v8h3v-8H7zm5 0v8h3v-8h-3z"/>',
  map:'<path d="M15 4l6-2v16l-6 2-6-2-6 2V4l6-2 6 2zm-1 2.2L10 4.9v12.9l4 1.3V6.2z"/>'
 };
-const TABS=[['near','Near me','near'],['plan','Plan','plan'],['hotel','Stay','stay'],['food','Eat','eat'],['nt','Places','nt']];
+const TABS=[['route','On route','near'],['plan','The plan','plan']];
 const tabbar=document.createElement('div'); tabbar.className='tabbar';
 TABS.forEach(([k,label,ic])=>{
   const b=document.createElement('button');
@@ -985,7 +998,8 @@ const SUBS={
   services:[['all','All stops'],['tesla','⚡ Tesla']],
   near:[['all','Everything'],['hotel','Hotels'],['services','Services'],['food','Food'],['nt','National Trust']]
 };
-const TITLE={near:['Near me','Tap “Locate me” to see what’s closest'],
+const TITLE={route:['On route','Your travel companion — tap a finder below'],
+  near:['Near me','Tap “Locate me” to see what’s closest'],
   plan:['The plan','Fri 14 – Sat 15 August · 250 miles'],
   hotel:['Stay','When do you want to stop?'],
   food:['Eat','When do you want to stop?'],
@@ -1019,8 +1033,8 @@ function buildChips(){
   chipsEl.innerHTML='';
   let opts=[];
   if(filter==='plan') opts=[];
-  else if(filter==='near') opts=[['map','🗺 Map']];
-  else opts=[['now','Now'],[10,'10m'],[20,'20m'],[30,'30m'],[40,'40m'],[50,'50m'],[60,'60m'],['map','🗺 Map']];
+  else if(findCat) opts=[['now','Now'],[10,'10m'],[20,'20m'],[30,'30m'],[40,'40m'],[50,'50m'],[60,'60m'],['map','🗺 Map']];
+  else opts=[['map','🗺 Map']];
   opts.forEach(([k,l])=>{
     const b=document.createElement('button');
     const on = k==='map' ? mapview : (!mapview && !showAll && when===k);
@@ -1037,6 +1051,18 @@ function buildChips(){
   chipsEl.style.display=opts.length?'flex':'none';
 }
 let sortBy='near', when='now', showAll=false;
+let findCat=null, ntAll=false;
+const FINDERS=[
+  ['hotel','🛏','Find hotels'],
+  ['services','⛽','Find services'],
+  ['food','🍽','Find food'],
+  ['nt','✦','Find Pokémon stops']
+];
+function openFind(c){
+  showAll=false; ntAll=false;
+  findCat = (findCat===c) ? null : c;      /* tap again to close */
+  if(filter!=='route') go('route'); else { buildChips(); render(); }
+}
 
 /* ============================================================
    MISSION CONTROL
@@ -1174,7 +1200,7 @@ function tonightCard(){
     <div class="acts" style="margin-top:11px">
       <a href="#" onclick="setTonightByName();return false" class="pri">Change</a>
       <a href="#" onclick="stopAtMe();return false">Use where I am</a>
-      <a href="#" onclick="go('hotel');return false">Pick a hotel</a>
+      <a href="#" onclick="openFind('hotel');return false">Pick a hotel</a>
     </div></div>`;
 }
 
@@ -1366,27 +1392,36 @@ locbtn.onclick=()=>{
       render()},
     {enableHighAccuracy:true,maximumAge:10000,timeout:12000});
 };
+/* GPS fires every few seconds. Re-rendering the page each time recreates every
+   <img>, which Safari repaints — that was the flicker. The blue dot moves on
+   every fix; the page itself only re-renders when it would meaningfully change. */
+let lastRt=0, lastRmi=-99;
 function setMe(lat,lng,acc,speedMps,ts){
   me={lat,lng};
-  pushFix(projectOnRoute(lat,lng).km,speedMps,ts);
+  const km=projectOnRoute(lat,lng).km;
+  pushFix(km,speedMps,ts);
   if(HAS_MAP&&map){
     if(!meMarker){meMarker=L.marker([lat,lng],{icon:L.divIcon({className:'',iconSize:[18,18],iconAnchor:[9,9],
       html:'<div class="me" style="width:18px;height:18px"></div>'}),zIndexOffset:1000}).addTo(map);map.setView([lat,lng],10)}
     else meMarker.setLatLng([lat,lng]);
-    if(acc){if(!meAcc)meAcc=L.circle([lat,lng],{radius:acc,color:'#0a84ff',weight:1,fillOpacity:.08}).addTo(map);
+    if(acc){if(!meAcc)meAcc=L.circle([lat,lng],{radius:acc,color:'#0077b6',weight:1,fillOpacity:.08}).addTo(map);
       else{meAcc.setLatLng([lat,lng]);meAcc.setRadius(acc)}}
   }
-  render();
+  const now=Date.now();
+  if(now-lastRt>12000 || Math.abs(km-lastRmi)>0.3){
+    lastRt=now; lastRmi=km;
+    render();
+  }
 }
 
 /* ---------- cards ---------- */
 function photoBlock(p){
   const ph=photoOf(p,700);
-  if(ph) return `<div class="photo"><img src="${ph}" alt="" loading="lazy" onerror="this.parentNode.style.display='none'">
+  if(ph) return `<div class="photo" data-pid="${p.id}"><img src="${ph}" alt="" loading="lazy" decoding="async" onerror="this.parentNode.style.display='none'">
     <div class="grad"></div><div class="cap">${p.n}</div></div>`;
   const lg=p.lg?BRAND[p.lg]:null;
   const col=COLOR[p.c];
-  return `<div class="fallback">
+  return `<div class="fallback" data-pid="${p.id}">
     ${lg?logoImg(lg[1],''):`<div class="fi" style="background:${col}">${p.n.replace(/^The /,'')[0]}</div>`}
     <div style="min-width:0"><div class="cname">${p.n}</div>
     <div style="font-size:12.5px;color:var(--lab2);margin-top:2px">${CATNAME[p.c]}${p.st?' · '+(p.st==='inn'?'inn / gastropub':p.st==='country'?'country house':'chain'):''}</div></div>
@@ -1832,26 +1867,97 @@ function listScreen(){
   return h;
 }
 
+/* ---------- ON ROUTE: mission control + pull-to-find ---------- */
+function finderButtons(){
+  return `<div class="sechead" style="margin-top:20px">Find something ahead<small>${
+    findCat?'tap a time above — “30m” means the 20–30 minute window':'nothing loads until you ask'}</small></div>
+  <div class="quads">`+FINDERS.map(([c,ic,label])=>`
+    <a class="quad" href="#" ${findCat===c?'style="outline:2px solid var(--blue)"':''}
+       onclick="openFind('${c}');return false">
+      <div class="k">${findCat===c?'✕ close':'tap to search'}</div>
+      <div class="v">${ic} ${label}</div>
+      <div class="m">${{hotel:'2 rooms, Fri 14 Aug',services:'fuel · food · chargers',food:'pubs & chains',nt:'trails & zones'}[c]}</div>
+    </a>`).join('')+`</div>`;
+}
+
+function resultsFor(cat){
+  const nowMi = me ? projectOnRoute(me.lat,me.lng).km : 0;
+  let base=P.filter(p=>p.c===cat && !p.soldout);
+  if(cat==='hotel'||cat==='food') base=base.filter(p=>p.detour<=MAX_DETOUR);
+  if(cat==='nt'&&!ntAll) base=base.filter(p=>p.pk);
+  base.forEach(p=>{
+    if(me) p.dist=haversine(me.lat,me.lng,p.lat,p.lng);
+    p.eta = p.routeMi>=nowMi-1
+      ? routeEta(nowMi,Math.max(nowMi,p.routeMi))+Math.round(p.detour/30*60) : null;
+  });
+
+  let h='';
+  if(!me) h+=`<div class="info">Times measured from <b>home</b> until you tap Locate me.</div>`;
+
+  if(showAll){
+    h+=`<div class="sechead">The full list<small>${base.length} in route order</small></div>`;
+    [...base].sort((a,b)=>a.routeMi-b.routeMi).forEach(p=>h+=card(p));
+  }
+  else if(when==='now'){
+    const list=[...base].sort((a,b)=> me ? a.dist-b.dist : (a.eta==null?1e9:a.eta)-(b.eta==null?1e9:b.eta)).slice(0,6);
+    h+=`<div class="sechead">Nearest now<small>closest first</small></div>`;
+    list.forEach(p=>h+=card(p));
+  }
+  else{
+    const lo=when-10, hi=when;
+    const inB=base.filter(p=>p.eta!=null&&p.eta>lo&&p.eta<=hi).sort((a,b)=>a.eta-b.eta);
+    h+=`<div class="sechead">Stop in ~${when} minutes<small>${
+      inB.length? inB.length+' in the '+lo+'–'+hi+' min window':'nothing lands in '+lo+'–'+hi+' min'}</small></div>`;
+    if(inB.length) inB.slice(0,6).forEach(p=>h+=card(p));
+    else{
+      const alt=base.filter(p=>p.eta!=null).sort((a,b)=>Math.abs(a.eta-when)-Math.abs(b.eta-when)).slice(0,3);
+      if(alt.length){h+=`<div class="info">Closest to that window instead:</div>`;alt.forEach(p=>h+=card(p));}
+      else h+=`<div class="empty">Everything here is behind you now.</div>`;
+    }
+  }
+
+  h+=`<div class="acts" style="margin:6px 0 4px">
+    ${cat==='nt'?`<a href="#" onclick="ntAll=!ntAll;render();return false">${ntAll?'Pokémon only':'All National Trust'}</a>`:''}
+    <a href="#" onclick="showAll=!showAll;render();return false">${showAll?'← Back':'Browse all '+base.length}</a>
+    ${cat==='hotel'?`<a class="pri" href="#" onclick="findMoreHotels();return false">🔎 ${GKEY_ON?'Search Google':'Google (needs key)'}</a>`:''}
+  </div>${cat==='hotel'?'<div id="moreout"></div>':''}`;
+  drawMap(base);
+  return h;
+}
+
+function routeScreen(){
+  let h='';
+  if(me){
+    const pr=projectOnRoute(me.lat,me.lng);
+    if(pr.d>25) h+=`<div class="status idle"><div class="pc">Off the planned route</div>
+      <div class="sub" style="color:var(--lab2)">About ${Math.round(pr.d)} miles from the M4/M5 line. Finder distances stay accurate.</div></div>`;
+    else h+=missionControl(pr);
+  } else {
+    if(locErr) h+=`<div class="info warn">${locErr}</div>`;
+    h+=`<div class="status idle"><div class="pc">Ready when you are</div>
+      <div class="sub" style="color:var(--lab2)">Tap <b style="color:var(--lab)">Locate me</b> and this becomes live — progress, ETA, and everything measured from the car.</div></div>`;
+    h+=journeyChart(0);
+    h+=tonightCard();
+  }
+  h+=finderButtons();
+  if(findCat) h+=resultsFor(findCat);
+  else drawMap(P);
+  return h;
+}
+
 /* ---------- render ---------- */
 function render(){
   buildChips();
-  let h='';
-  if(filter==='near')h=nearScreen();
-  else if(filter==='plan')h=planScreen();
-  else h=listScreen();
-  listEl.innerHTML=h;
-  /* photo cards: name lives in the caption, so blank the duplicate */
+  listEl.innerHTML = (filter==='plan') ? planScreen() : routeScreen();
   [...listEl.querySelectorAll('.card.hasphoto .crow .cname')].forEach(e=>e.remove());
-  /* Google photos: only on the Stay tab, only the six nearest, once each. */
-  if(GKEY_ON && filter==='hotel'){
+  if(GKEY_ON && findCat==='hotel'){
     queuePhotos(P.filter(p=>p.c==='hotel'&&!p.soldout)
-                 .sort((a,b)=>(a.dist!=null?a.dist:a.routeMi)-(b.dist!=null?b.dist:b.routeMi))
-                 .slice(0,6));
+      .sort((a,b)=>(a.dist!=null?a.dist:a.routeMi)-(b.dist!=null?b.dist:b.routeMi)).slice(0,6));
   }
 }
 function focusOn(id){const p=P[id];window.open(mapsUrl(p),'_blank')}
 
-go('near');
+go('route');
 setTimeout(()=>{if(HAS_MAP&&map)map.invalidateSize()},250);
 </script>
 </body>
