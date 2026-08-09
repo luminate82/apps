@@ -850,6 +850,12 @@ function card(p){
   const ph=!!photoOf(p);
   const t=[];
   if(p.dist!=null) t.push(`<span class="dist">${fmtD(p.dist)}</span>`);
+  if(p.ahead!=null){
+    t.push(p.ahead>2
+      ? `<span class="tag hi">${Math.round(p.ahead)} mi ahead</span>`
+      : p.ahead<-2 ? `<span class="tag warn">${Math.round(-p.ahead)} mi behind you</span>`
+      : `<span class="tag hi">you're here</span>`);
+  }
   t.push(`<span class="tag">${p.jn}</span>`);
   t.push(`<span class="tag${p.detour<=1.5?' hi':''}">${p.detour===0?'no detour':'~'+p.detour+' mi off'}</span>`);
   if(p.tesla===1) t.push('<span class="tag tesla">⚡ Tesla</span>');
@@ -929,9 +935,25 @@ function nearScreen(){
   </div>`;
 
   let items=[...P].filter(p=>sub==='all'||p.c===sub).sort((a,b)=>a.dist-b.dist);
-  const within=items.filter(p=>p.dist<=15);
-  h+=`<div class="sechead">Closest to you now<small>${within.length?within.length+' places within 15 miles':'Nothing within 15 miles — showing the nearest anyway'}</small></div>`;
-  (within.length?within:items.slice(0,15)).slice(0,40).forEach(p=>h+=card(p));
+  /* how far along the route each place sits relative to you */
+  items.forEach(p=>p.ahead=p.routeMi-pr.km);
+
+  /* Progressive radius: widen until there's a useful number of results.
+     A fixed 15-mile cut left you with 2 places at the start of the journey. */
+  const MIN=8;
+  const RINGS=[15,30,60,120,250];
+  let ring=null,within=items;
+  for(const r of RINGS){
+    const set=items.filter(p=>p.dist<=r);
+    if(set.length>=Math.min(MIN,items.length)){ring=r;within=set;break}
+  }
+  if(ring===null){ring=null;within=items}
+
+  const label = ring
+    ? `${within.length} within ${ring} miles`
+    : `Only ${items.length} in the app — showing all of them`;
+  h+=`<div class="sechead">Closest to you<small>${label} · ${items.filter(p=>p.ahead>0).length} still ahead on the route</small></div>`;
+  within.slice(0,40).forEach(p=>h+=card(p));
   drawMap(items.slice(0,60));
   return h;
 }
