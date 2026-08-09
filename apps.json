@@ -1,0 +1,31 @@
+{
+  "owner": "Avinash",
+  "title": "My Apps",
+  "tagline": "Things Claude built me",
+  "apps": [
+    {
+      "slug": "road-trip-companion",
+      "file": "road-trip-companion.html",
+      "name": "Woolacombe Road Trip",
+      "blurb": "Live travel companion for the drive to North Devon — hotels with real availability, Tesla chargers, National Trust Pokémon trails and a timed plan.",
+      "icon": "🚗",
+      "colour": "#0a84ff",
+      "url": null,
+      "created": "2026-08-09",
+      "updated": "2026-08-09",
+      "tags": ["travel", "iphone"]
+    },
+    {
+      "slug": "nanny-finder",
+      "file": null,
+      "name": "Nanny Finder",
+      "blurb": "Not built yet — ask Claude to make it and it'll appear here.",
+      "icon": "🧸",
+      "colour": "#bf5af0",
+      "url": null,
+      "created": null,
+      "updated": null,
+      "tags": ["planned"]
+    }
+  ]
+}

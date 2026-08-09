@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="theme-color" content="#000000">
+<title>My Apps</title>
+<style>
+  :root{--bg:#000;--card:#1c1c1e;--card2:#2c2c2e;
+    --lab:#fff;--lab2:#98989f;--lab3:#68686e;--blue:#0a84ff;
+    --st:env(safe-area-inset-top,0px);--sb:env(safe-area-inset-bottom,0px);}
+  *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+  body{background:var(--bg);color:var(--lab);
+    font:17px/1.4 -apple-system,BlinkMacSystemFont,"SF Pro Text","Segoe UI",Roboto,sans-serif;
+    -webkit-font-smoothing:antialiased;padding:calc(var(--st) + 12px) 16px calc(var(--sb) + 40px)}
+  a{color:inherit;text-decoration:none}
+  h1{font-size:34px;font-weight:800;letter-spacing:-1px}
+  .sub{font-size:15px;color:var(--lab2);margin-top:4px}
+  .sec{font-size:12px;font-weight:700;letter-spacing:.7px;text-transform:uppercase;
+    color:var(--lab2);margin:26px 0 10px}
+  .app{display:flex;align-items:center;gap:14px;background:var(--card);
+    border-radius:18px;padding:15px;margin-bottom:11px;transition:transform .12s}
+  .app:active{transform:scale(.975)}
+  .app.off{opacity:.5}
+  .ic{width:52px;height:52px;border-radius:14px;flex:none;display:flex;
+    align-items:center;justify-content:center;font-size:26px}
+  .txt{flex:1;min-width:0}
+  .nm{font-size:17px;font-weight:700;letter-spacing:-.4px}
+  .bl{font-size:13.5px;color:var(--lab2);margin-top:3px;line-height:1.4}
+  .mt{font-size:11px;color:var(--lab3);margin-top:7px;display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+  .tag{background:var(--card2);color:var(--lab2);border-radius:5px;padding:2px 6px;font-weight:600}
+  .chev{flex:none;color:var(--lab3);font-size:26px;font-weight:300;line-height:1}
+  .empty{text-align:center;color:var(--lab2);padding:60px 20px}
+  footer{margin-top:34px;font-size:12px;color:var(--lab3);line-height:1.6;text-align:center}
+</style>
+</head>
+<body>
+  <h1>My Apps</h1>
+  <div class="sub">Things Claude built me</div>
+  <div class="sec">Your apps</div><a class="app" href="road-trip-companion.html">
+      <div class="ic" style="background:#0a84ff22;color:#0a84ff">🚗</div>
+      <div class="txt">
+        <div class="nm">Woolacombe Road Trip</div>
+        <div class="bl">Live travel companion for the drive to North Devon — hotels with real availability, Tesla chargers, National Trust Pokémon trails and a timed plan.</div>
+        <div class="mt">Updated 2026-08-09<span class="tag">travel</span><span class="tag">iphone</span></div>
+      </div>
+      <div class="chev">›</div>
+    </a><div class="sec">Not built yet</div><div class="app off">
+      <div class="ic" style="background:#2c2c2e;color:#68686e">🧸</div>
+      <div class="txt">
+        <div class="nm">Nanny Finder</div>
+        <div class="bl">Not built yet — ask Claude to make it and it&#x27;ll appear here.</div>
+        <div class="mt">Not built yet<span class="tag">planned</span></div>
+      </div>
+    </div>
+  <footer>Add to Home Screen to use this like an app.<br>Rebuilt 2026-08-09</footer>
+</body>
+</html>

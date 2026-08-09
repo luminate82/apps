@@ -1,0 +1,1014 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=5, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="theme-color" content="#0f172a">
+<title>Woolacombe Road Trip Companion</title>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin=""/>
+<style>
+  :root{
+    /* iOS dark system palette */
+    --bg:#000; --card:#1c1c1e; --card2:#2c2c2e; --sep:#38383a;
+    --lab:#fff; --lab2:#98989f; --lab3:#68686e;
+    --blue:#0a84ff; --green:#30d158; --orange:#ff9f0a; --red:#ff453a;
+    --yellow:#ffd60a; --purple:#bf5af0; --teal:#40c8e0; --pink:#ff375f;
+    --hotel:#bf5af0; --services:#40c8e0; --food:#ff9f0a; --nt:#30d158;
+    --st:env(safe-area-inset-top,0px); --sb:env(safe-area-inset-bottom,0px);
+  }
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;margin:0;padding:0}
+  html{background:var(--bg)}
+  body{
+    background:var(--bg); color:var(--lab);
+    font:17px/1.4 -apple-system,BlinkMacSystemFont,"SF Pro Text","Segoe UI",Roboto,sans-serif;
+    -webkit-font-smoothing:antialiased; overscroll-behavior-y:none;
+    padding-bottom:calc(56px + var(--sb));
+  }
+  a{color:inherit;text-decoration:none}
+  button{font-family:inherit;border:0;background:none;color:inherit}
+  img{display:block}
+
+  /* ---------- nav bar ---------- */
+  .nav{position:sticky;top:0;z-index:90;padding:calc(var(--st) + 6px) 16px 8px;
+    background:rgba(0,0,0,.8);-webkit-backdrop-filter:saturate(180%) blur(20px);
+    backdrop-filter:saturate(180%) blur(20px);border-bottom:.5px solid var(--sep)}
+  .navrow{display:flex;align-items:center;gap:10px}
+  .navtitle{font-size:15px;font-weight:600;letter-spacing:-.2px;flex:1;min-width:0;
+    white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .big{font-size:32px;font-weight:800;letter-spacing:-.8px;padding:2px 16px 10px}
+  .big small{display:block;font-size:14px;font-weight:400;color:var(--lab2);letter-spacing:-.1px;margin-top:2px}
+
+  .locpill{flex:none;display:flex;align-items:center;gap:6px;background:var(--card2);
+    border-radius:999px;padding:7px 13px;font-size:14px;font-weight:600}
+  .locpill.on{background:var(--blue)}
+  .locpill .d{width:8px;height:8px;border-radius:50%;background:var(--lab3)}
+  .locpill.on .d{background:#fff;animation:pl 2s infinite}
+  @keyframes pl{0%{opacity:1}50%{opacity:.35}100%{opacity:1}}
+
+  /* ---------- segmented / scroll chips ---------- */
+  .scroller{display:flex;gap:8px;overflow-x:auto;padding:10px 16px 2px;
+    scrollbar-width:none;-webkit-overflow-scrolling:touch}
+  .scroller::-webkit-scrollbar{display:none}
+  .pill{flex:none;background:var(--card2);color:var(--lab2);border-radius:999px;
+    padding:8px 14px;font-size:14px;font-weight:600;white-space:nowrap;transition:transform .1s}
+  .pill:active{transform:scale(.94)}
+  .pill.on{background:var(--lab);color:#000}
+
+  /* ---------- content ---------- */
+  .wrap{padding:0 16px}
+  .sechead{font-size:22px;font-weight:800;letter-spacing:-.5px;margin:24px 0 10px}
+  .sechead small{display:block;font-size:13px;font-weight:400;color:var(--lab2);letter-spacing:0;margin-top:2px}
+  .grouphead{font-size:12px;font-weight:700;letter-spacing:.6px;text-transform:uppercase;
+    color:var(--lab2);margin:22px 0 8px}
+
+  /* ---------- status card ---------- */
+  .status{background:linear-gradient(140deg,#0a84ff,#5e5ce6);border-radius:20px;padding:18px;margin:6px 0 4px}
+  .status .pc{font-size:40px;font-weight:800;letter-spacing:-1.5px;line-height:1}
+  .status .sub{font-size:14px;opacity:.92;margin-top:4px}
+  .bar{height:6px;background:rgba(255,255,255,.28);border-radius:99px;margin-top:14px;overflow:hidden}
+  .bar i{display:block;height:100%;background:#fff;border-radius:99px}
+  .status.idle{background:var(--card)}
+  .status.idle .pc{font-size:19px;letter-spacing:-.4px}
+
+  .quads{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:12px}
+  .quad{background:var(--card);border-radius:16px;padding:13px 14px}
+  .quad .k{font-size:11px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:var(--lab2)}
+  .quad .v{font-size:15px;font-weight:700;letter-spacing:-.3px;margin-top:5px;line-height:1.25}
+  .quad .m{font-size:12px;color:var(--lab2);margin-top:3px}
+
+  /* ---------- place card ---------- */
+  .card{background:var(--card);border-radius:18px;overflow:hidden;margin-bottom:12px}
+  .photo{position:relative;height:150px;background:var(--card2);overflow:hidden}
+  .photo img{width:100%;height:100%;object-fit:cover}
+  .photo .grad{position:absolute;inset:0;background:linear-gradient(180deg,rgba(0,0,0,0) 40%,rgba(0,0,0,.75))}
+  .photo .cap{position:absolute;left:14px;right:14px;bottom:11px;font-size:19px;font-weight:800;letter-spacing:-.4px;text-shadow:0 1px 8px rgba(0,0,0,.6)}
+  .fallback{height:92px;display:flex;align-items:center;gap:12px;padding:0 16px}
+  .fallback img{width:40px;height:40px;border-radius:10px;background:#fff;object-fit:contain;flex:none}
+  .fallback .fi{width:40px;height:40px;border-radius:10px;flex:none;display:flex;align-items:center;
+    justify-content:center;font-size:17px;font-weight:800;color:#000}
+  .body{padding:13px 16px 15px}
+  .card.hasphoto .body{padding-top:12px}
+  .cname{font-size:17px;font-weight:700;letter-spacing:-.4px;line-height:1.25}
+  .crow{display:flex;align-items:flex-start;gap:10px}
+  .crow .cname{flex:1;min-width:0}
+  .price{flex:none;text-align:right}
+  .price b{font-size:19px;font-weight:800;letter-spacing:-.5px;color:var(--green)}
+  .price span{display:block;font-size:10px;font-weight:700;letter-spacing:.4px;color:var(--lab2)}
+  .dist{display:inline-flex;align-items:center;gap:4px;background:var(--blue);color:#fff;
+    border-radius:99px;padding:3px 9px;font-size:12px;font-weight:800;letter-spacing:-.1px}
+  .tags{display:flex;flex-wrap:wrap;gap:6px;margin-top:9px}
+  .tag{background:var(--card2);color:var(--lab2);border-radius:7px;padding:3px 8px;font-size:12px;font-weight:600}
+  .tag.hi{background:rgba(10,132,255,.22);color:#6cb6ff}
+  .tag.pk{background:rgba(255,214,10,.18);color:var(--yellow)}
+  .tag.tesla{background:rgba(255,69,58,.18);color:#ff8078}
+  .tag.warn{background:rgba(255,159,10,.18);color:var(--orange)}
+  .note{font-size:14px;color:#d1d1d6;margin-top:10px;line-height:1.45}
+  .brands{display:flex;flex-wrap:wrap;gap:6px;margin-top:11px}
+  .brand{display:flex;align-items:center;gap:5px;background:var(--card2);border-radius:8px;
+    padding:4px 8px 4px 5px;font-size:12px;font-weight:600;color:#d1d1d6}
+  .brand img{width:16px;height:16px;border-radius:4px;background:#fff;object-fit:contain}
+  .acts{display:flex;gap:8px;margin-top:13px}
+  .acts a{flex:1;text-align:center;background:var(--card2);border-radius:11px;
+    padding:11px 6px;font-size:14px;font-weight:600;transition:transform .1s}
+  .acts a:active{transform:scale(.96)}
+  .acts a.pri{background:var(--blue);color:#fff}
+
+  /* ---------- itinerary ---------- */
+  .daybar{background:var(--card);border-radius:16px;padding:14px 16px;margin:20px 0 12px}
+  .daybar b{font-size:19px;font-weight:800;letter-spacing:-.5px}
+  .daybar small{display:block;font-size:13px;color:var(--lab2);margin-top:3px}
+  .leg{display:flex;gap:13px}
+  .rail{flex:none;width:14px;display:flex;flex-direction:column;align-items:center;padding-top:5px}
+  .rdot{width:12px;height:12px;border-radius:50%;background:var(--blue);flex:none}
+  .rdot.stop{background:var(--orange)}.rdot.sleep{background:var(--purple)}
+  .rdot.pk{background:var(--yellow);width:15px;height:15px}.rdot.end{background:var(--pink)}
+  .rrod{flex:1;width:2px;background:var(--sep);margin:4px 0}
+  .lbody{flex:1;min-width:0;padding-bottom:18px}
+  .ltime{font-size:13px;font-weight:800;color:var(--blue);letter-spacing:-.1px}
+  .lname{font-size:17px;font-weight:700;letter-spacing:-.4px;margin-top:2px}
+  .lnote{font-size:14px;color:#d1d1d6;margin-top:6px;line-height:1.45}
+  .drivebar{margin:-10px 0 12px 27px;padding:10px 13px;background:var(--card);border-radius:12px}
+  .drivebar b{font-size:13px;color:var(--lab)}
+  .drivebar div{font-size:13px;color:var(--lab2);margin-top:4px;line-height:1.4}
+  .totals{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin:14px 0 4px}
+  .tot{background:var(--card);border-radius:16px;padding:14px 8px;text-align:center}
+  .tot b{display:block;font-size:24px;font-weight:800;letter-spacing:-.8px;color:var(--blue)}
+  .tot span{font-size:11px;font-weight:700;letter-spacing:.4px;color:var(--lab2)}
+
+  .info{background:var(--card);border-radius:14px;padding:13px 15px;font-size:13.5px;
+    color:var(--lab2);line-height:1.5;margin-bottom:12px}
+  .info b{color:var(--lab)}
+  .info.pk{background:rgba(255,214,10,.1)}
+  .info.warn{background:rgba(255,159,10,.12)}
+  .empty{text-align:center;color:var(--lab2);padding:60px 20px;font-size:15px}
+
+  /* ---------- map ---------- */
+  #map{height:calc(100vh - 150px - var(--sb));width:100%;background:var(--card);display:none}
+  body.mapview #map{display:block}
+  body.mapview #list{display:none}
+  body.mapview{padding-bottom:calc(56px + var(--sb))}
+  .leaflet-container{font-family:inherit;background:#1c1c1e}
+  .leaflet-popup-content-wrapper{background:#1c1c1e;color:#fff;border-radius:14px}
+  .leaflet-popup-tip{background:#1c1c1e}
+  .leaflet-popup-content{margin:12px 14px;font-size:14px;line-height:1.4}
+  .leaflet-popup-content a{color:var(--blue);font-weight:600}
+  .leaflet-bar a{background:#1c1c1e;color:#fff;border-color:#38383a}
+  .pin{border-radius:50%;border:2px solid #000;box-shadow:0 1px 5px rgba(0,0,0,.6)}
+  .me{background:var(--blue);border:3px solid #fff;border-radius:50%;box-shadow:0 0 0 7px rgba(10,132,255,.25)}
+
+  /* ---------- tab bar ---------- */
+  .tabbar{position:fixed;left:0;right:0;bottom:0;z-index:100;display:flex;
+    padding:6px 4px calc(var(--sb) + 4px);background:rgba(20,20,22,.88);
+    -webkit-backdrop-filter:saturate(180%) blur(20px);backdrop-filter:saturate(180%) blur(20px);
+    border-top:.5px solid var(--sep)}
+  .tab{flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;
+    padding:5px 2px;color:var(--lab3);font-size:10px;font-weight:600;letter-spacing:-.1px}
+  .tab svg{width:25px;height:25px;fill:currentColor}
+  .tab.on{color:var(--blue)}
+  .tab:active{opacity:.55}
+  footer{padding:22px 16px 34px;font-size:12px;color:var(--lab3);line-height:1.6;text-align:center}
+</style>
+</head>
+<body>
+
+<div class="nav">
+  <div class="navrow">
+    <div class="navtitle" id="navtitle">Woolacombe Road Trip</div>
+    <button class="locpill" id="locbtn"><span class="d"></span><span id="loclabel">Locate me</span></button>
+  </div>
+</div>
+<div class="big" id="bigtitle">Near me<small>Tap “Locate me” to see what’s closest</small></div>
+<div class="scroller" id="chips"></div>
+<div class="scroller" id="subchips"></div>
+
+<div id="map"></div>
+<div id="list" class="wrap"></div>
+
+<footer>
+  Hotel prices checked live on Booking.com and Premier Inn for <b>Fri 14 &rarr; Sat 15 Aug 2026, 2 rooms</b> &mdash;
+  all had 2 rooms bookable at the time. Prices are the total for both rooms and <b>will change</b>.
+  Detours are straight-line distance to the motorway route &times; 1.3.
+</footer>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script>
+<script>
+window.onerror=function(msg,src,line){
+  var l=document.getElementById('list');
+  if(l&&!l.innerHTML.trim()){
+    document.body.classList.remove('mapview');
+    l.innerHTML='<div class="banner warn"><b>Something went wrong loading the page.</b><br><br>'+
+      String(msg)+'<br>line '+line+'<br><br>Screenshot this and send it over.</div>';
+  }
+};
+</script>
+<script>
+/* ---------- route: South Woodford -> M11 -> M25 -> M4 -> M5 -> A361 -> Woolacombe ---------- */
+const ROUTE = [
+ [51.5910,0.0290],[51.6180,0.0430],[51.6870,0.0770],[51.6930,-0.0350],[51.6960,-0.2280],
+ [51.6890,-0.4100],[51.6420,-0.4880],[51.5680,-0.5490],[51.5000,-0.5220],[51.4900,-0.6060],
+ [51.5210,-0.7420],[51.4830,-0.8320],[51.4370,-0.9070],[51.4130,-0.9860],[51.4360,-1.0430],
+ [51.4400,-1.0730],[51.4380,-1.1500],[51.4430,-1.2200],[51.4500,-1.2830],[51.4460,-1.3800],
+ [51.4520,-1.4650],[51.4580,-1.5350],[51.4900,-1.6200],
+ [51.5250,-1.6910],[51.5100,-1.7700],[51.5170,-1.8300],[51.5400,-1.8620],[51.5300,-1.9500],
+ [51.5170,-2.1240],[51.5130,-2.1750],[51.5170,-2.3070],[51.5240,-2.5390],[51.5470,-2.5760],
+ [51.4630,-2.7480],[51.3400,-2.9130],[51.2400,-2.9800],[51.1500,-2.9800],[51.0930,-2.9800],
+ [50.9930,-3.0630],[50.9560,-3.2160],[50.8930,-3.3670],[50.9300,-3.5500],[51.0130,-3.8330],
+ [51.0730,-4.0400],[51.1080,-4.1620],[51.1710,-4.2080]
+];
+
+/* ---------- brand logo domains (rendered via favicon service) ---------- */
+const BRAND={
+  waga:["Wagamama","wagamama.com"], nandos:["Nando's","nandos.co.uk"],
+  pe:["PizzaExpress","pizzaexpress.com"], fg:["Five Guys","fiveguys.co.uk"],
+  gbk:["GBK","gbk.co.uk"], honest:["Honest Burgers","honestburgers.co.uk"],
+  costa:["Costa","costa.co.uk"], sbux:["Starbucks","starbucks.co.uk"],
+  kfc:["KFC","kfc.co.uk"], bk:["Burger King","burgerking.co.uk"],
+  mcd:["McDonald's","mcdonalds.com"], greggs:["Greggs","greggs.co.uk"],
+  ms:["M&S Food","marksandspencer.com"], waitrose:["Waitrose","waitrose.com"],
+  whs:["WHSmith","whsmith.co.uk"], subway:["Subway","subway.com"],
+  tesla:["Tesla","tesla.com"], gridserve:["Gridserve","gridserve.com"],
+  pi:["Premier Inn","premierinn.com"], ihg:["IHG","ihg.com"],
+  hilton:["Hilton","hilton.com"], accor:["Accor","accor.com"],
+  bw:["Best Western","bestwestern.co.uk"], marriott:["Marriott","marriott.com"],
+  village:["Village Hotels","village-hotels.co.uk"], leonardo:["Leonardo","leonardohotels.com"],
+  daysinn:["Days Inn","wyndhamhotels.com"], gk:["Greene King","greeneking.co.uk"],
+  nt:["National Trust","nationaltrust.org.uk"], pkmn:["Pokémon","pokemon.com"],
+  tesco:["Tesco","tesco.com"], bp:["BP","bp.com"]
+};
+
+/* ============================================================
+   PLACES.  c: hotel | services | food | nt
+   st (hotels): inn = pub/inn with rooms · chain · country = country house/spa
+   pk (NT): trail = Mega Evolution TCG Trail · zone = Pokémon zone · stickers
+   ============================================================ */
+const P = [
+
+/* ================= HOTELS — READING & M4 J10–J12 ================= */
+{n:"Easyhotel Reading",c:"hotel",st:"chain",lat:51.4550,lng:-0.9760,p:94,jn:"M4 J11",a:"Reading",
+ note:"Cheapest two rooms on the whole route. Small and basic, town centre — a bed, not an experience."},
+{n:"Sure Hotel by Best Western Reading",c:"hotel",st:"chain",lg:"bw",lat:51.4480,lng:-0.9550,p:97,jn:"M4 J11",a:"Reading",
+ note:"Second cheapest anywhere. A mile from the centre."},
+{n:"ibis Reading Centre",c:"hotel",st:"chain",lg:"accor",lat:51.4560,lng:-0.9720,p:121,jn:"M4 J11",a:"Reading",
+ note:"Walkable to the Oracle — Wagamama, Nando's and PizzaExpress all on the doorstep."},
+{n:"Wee Waif by Greene King Inns",c:"hotel",st:"inn",lg:"gk",lat:51.4560,lng:-0.9070,p:120,jn:"M4 J10",a:"Reading",
+ note:"Roadside inn on the A4. Family pub food, free parking, no fuss."},
+{n:"Holiday Inn Reading South M4 Jct 11",c:"hotel",st:"chain",lg:"ihg",lat:51.4200,lng:-0.9800,p:122,jn:"M4 J11",a:"Reading",
+ note:"Literally at the junction. Pool and gym on site."},
+{n:"Premier Inn Reading Gateway (M4 J11)",c:"hotel",st:"chain",lg:"pi",b:"pi",q:"Reading Gateway",lat:51.4180,lng:-0.9840,p:132,jn:"M4 J11",a:"Reading",
+ note:"Straight off the J11 roundabout, Beefeater attached, free parking. The easiest possible first-night stop."},
+{n:"Best Western Reading Calcot",c:"hotel",st:"chain",lg:"bw",lat:51.4380,lng:-1.0530,p:135,jn:"M4 J12",a:"Reading",
+ note:"Right by J12 — the last easy Reading option heading west."},
+{n:"Garner Hotel Reading City Centre",c:"hotel",st:"chain",lg:"ihg",lat:51.4570,lng:-0.9740,p:140,jn:"M4 J11",a:"Reading",
+ note:"400 yards from the centre."},
+{n:"Hilton Reading",c:"hotel",st:"chain",lg:"hilton",lat:51.4420,lng:-0.9860,p:141,jn:"M4 J11",a:"Reading",
+ note:"Pool. Solid mid-range family pick."},
+{n:"Premier Inn Reading Caversham Bridge",c:"hotel",st:"chain",lg:"pi",b:"pi",q:"Reading Caversham Bridge",lat:51.4640,lng:-0.9760,p:156,jn:"M4 J11",a:"Reading",
+ note:"On the Thames — a decent evening walk with the kids before dinner."},
+{n:"pentahotel Reading",c:"hotel",st:"chain",lat:51.4530,lng:-0.9700,p:158,jn:"M4 J11",a:"Reading",
+ note:"Central, lively lobby bar, pool table."},
+{n:"Premier Inn Reading Central",c:"hotel",st:"chain",lg:"pi",b:"pi",q:"Reading Central",lat:51.4570,lng:-0.9720,p:160,jn:"M4 J11",a:"Reading",
+ note:"Town centre — walk to the Oracle for dinner."},
+{n:"Bull Inn, Sonning",c:"hotel",st:"inn",lat:51.4750,lng:-0.9080,p:160,jn:"M4 J10",a:"Reading",
+ note:"Ancient timbered inn in a very pretty Thames village. Free parking."},
+{n:"Novotel Reading Centre",c:"hotel",st:"chain",lg:"accor",lat:51.4560,lng:-0.9730,p:178,jn:"M4 J11",a:"Reading",
+ note:"Family rooms with sofa beds as standard — useful if you'd rather one room than two."},
+{n:"De Vere Wokefield Estate",c:"hotel",st:"country",lat:51.3760,lng:-1.0230,p:178,jn:"M4 J11",a:"Reading",
+ note:"250 acres of parkland and golf. Proper grounds to run around in."},
+{n:"Crowne Plaza Reading",c:"hotel",st:"chain",lg:"ihg",lat:51.4590,lng:-1.0470,p:184,jn:"M4 J12",a:"Reading",
+ note:"Riverside, close to J12."},
+{n:"Village Hotel Reading",c:"hotel",st:"chain",lg:"village",lat:51.4470,lng:-0.9930,p:196,jn:"M4 J11",a:"Reading",
+ note:"Pool and leisure club — kids reliably love these."},
+{n:"voco Reading",c:"hotel",st:"chain",lg:"ihg",lat:51.4200,lng:-0.9790,p:198,jn:"M4 J11",a:"Reading",
+ note:"Refurbished, near J11."},
+{n:"Premier Inn Winnersh",c:"hotel",st:"chain",lg:"pi",b:"pi",q:"Winnersh",lat:51.4320,lng:-0.8750,p:201,jn:"M4 J10",a:"Reading",
+ note:"Just off J10 if you're coming down the M4 rather than the M25."},
+{n:"The Market House, Reading",c:"hotel",st:"inn",lat:51.4550,lng:-0.9700,p:207,jn:"M4 J11",a:"Reading",
+ note:"Rooms above a good town-centre pub, 300 yards from the shops."},
+{n:"Premier Inn Reading South (Grazeley Green)",c:"hotel",st:"chain",lg:"pi",b:"pi",q:"Reading South Grazeley Green",lat:51.3830,lng:-1.0210,p:243,jn:"M4 J11",a:"Reading",
+ note:"Quiet, rural edge of Reading."},
+{n:"Malmaison Reading",c:"hotel",st:"country",lat:51.4560,lng:-0.9720,p:246,jn:"M4 J11",a:"Reading",
+ note:"In the old Great Western station building. Dark, plush, grown-up."},
+{n:"Elephant Hotel, Pangbourne",c:"hotel",st:"inn",lat:51.4870,lng:-1.0900,p:249,jn:"M4 J12",a:"Reading",
+ note:"Thames-side village hotel. Walk to Basildon Park in the morning."},
+{n:"The Swan, Streatley",c:"hotel",st:"inn",lat:51.5220,lng:-1.1400,p:378,jn:"M4 J12",a:"Reading",
+ note:"8.5/10, location scored 9.6. Right on the river at Goring Gap — the prettiest stop in this stretch."},
+{n:"Holiday Inn Reading West",c:"hotel",st:"chain",lg:"ihg",lat:51.4370,lng:-1.0480,p:384,jn:"M4 J12",a:"Reading",
+ note:"Free parking, breakfast included, free cancellation."},
+
+/* ================= HOTELS — NEWBURY, HUNGERFORD & THE DOWNS (M4 J13–J14) ================= */
+{n:"Days Inn Membury (M4 services)",c:"hotel",st:"chain",lg:"daysinn",lat:51.4570,lng:-1.5390,p:120,jn:"M4 J14/15",a:"Newbury & Hungerford",dOverride:0,
+ note:"⭐ ZERO detour — it is the motorway services. Charmless but supremely efficient: pull off, sleep, pull back on."},
+{n:"George & Horn, Kingsclere",c:"hotel",st:"inn",lat:51.3290,lng:-1.2380,p:130,jn:"M4 J13",a:"Newbury & Hungerford",
+ note:"Cheapest inn in the Newbury area. Double + triple room, free parking, free cancellation."},
+{n:"The Beach Arms, Oakley",c:"hotel",st:"inn",lat:51.2540,lng:-1.1740,p:184,jn:"M4 J13",a:"Newbury & Hungerford",
+ note:"Innkeeper's Collection roadside inn. Free parking, no prepayment."},
+{n:"The Swan at Compton",c:"hotel",st:"inn",lat:51.5170,lng:-1.2620,p:190,jn:"M4 J13",a:"Newbury & Hungerford",
+ note:"Downland village pub with rooms, just off the A34. Free cancellation, pay on arrival."},
+{n:"The Crown & Horns, East Ilsley",c:"hotel",st:"inn",lat:51.5390,lng:-1.2870,p:214,jn:"M4 J13",a:"Newbury & Hungerford",
+ note:"Proper racing-country village inn off the A34. Family room plus a double."},
+{n:"Orida Hotel Newbury",c:"hotel",st:"country",lat:51.4570,lng:-1.3210,p:217,jn:"M4 J13",a:"Newbury & Hungerford",
+ note:"Beside J13 at Chieveley. Pool, big grounds, very easy in and out."},
+{n:"Mercure Newbury West Grange",c:"hotel",st:"chain",lg:"accor",lat:51.4020,lng:-1.2400,p:257,jn:"M4 J13",a:"Newbury & Hungerford",
+ note:"Thatcham. Free parking, quiet."},
+{n:"Regency Park Hotel, Health Club & Spa",c:"hotel",st:"country",lat:51.4030,lng:-1.2680,p:267,jn:"M4 J13",a:"Newbury & Hungerford",
+ note:"Pool and spa. The one to pick if you want the kids swum out before bed."},
+{n:"The Pot Kiln, Frilsham",c:"hotel",st:"inn",lat:51.4570,lng:-1.2070,p:320,jn:"M4 J13",a:"Newbury & Hungerford",
+ note:"⭐ 9.1/10, location 9.4. Genuinely excellent game-focused gastropub deep in the woods near Yattendon. Breakfast included, free cancellation, free parking. Book the table when you book the room."},
+{n:"Bel and The Dragon, Kingsclere",c:"hotel",st:"inn",lat:51.3290,lng:-1.2400,p:324,jn:"M4 J13",a:"Newbury & Hungerford",
+ note:"9.1/10. Smart village gastropub with rooms. Breakfast included, free cancellation, pay on arrival."},
+{n:"The Carnarvon Arms, Highclere",c:"hotel",st:"inn",lat:51.3630,lng:-1.3660,p:326,jn:"M4 J13",a:"Newbury & Hungerford",
+ note:"On the Highclere Castle estate road — yes, Downton Abbey. Free parking, free cancellation."},
+{n:"Sandford Springs Hotel & Golf Club",c:"hotel",st:"country",lat:51.3210,lng:-1.2560,p:328,jn:"M4 J13",a:"Newbury & Hungerford",
+ note:"Golf resort. Air-con, free cancellation, choice of bed configuration."},
+{n:"The Pheasant Inn, Hungerford",c:"hotel",st:"inn",lat:51.4290,lng:-1.5340,p:330,jn:"M4 J14",a:"Newbury & Hungerford",
+ note:"⭐ 9.2/10 — one of the best-rated on the route, and only a couple of miles off J14. Free cancellation."},
+{n:"Hare and Hounds, Newbury",c:"hotel",st:"inn",lat:51.4180,lng:-1.3450,p:369,jn:"M4 J13",a:"Newbury & Hungerford",
+ note:"8.6/10 with an excellent breakfast and a big free car park. King rooms."},
+{n:"The Wheatsheaf, Chilton Foliat",c:"hotel",st:"inn",lat:51.4340,lng:-1.5570,p:370,jn:"M4 J14",a:"Newbury & Hungerford",
+ note:"Thatched village inn on the Kennet, minutes from Hungerford and J14."},
+{n:"The Royal Oak, Yattendon",c:"hotel",st:"inn",lat:51.4650,lng:-1.1930,p:380,jn:"M4 J13",a:"Newbury & Hungerford",
+ note:"8.9/10, location 9.4. Handsome red-brick coaching inn on a village square. Breakfast included, pay on arrival."},
+{n:"The Coat and Bear, Newbury",c:"hotel",st:"inn",lat:51.4010,lng:-1.3230,p:548,jn:"M4 J13",a:"Newbury & Hungerford",
+ note:"9.1/10, location 9.4. Heartwood Inn right in Newbury centre, 350 yards from PizzaExpress. Air-con. Pricey but the best-rated room in town."},
+{n:"Premier Inn Newbury Town Centre",c:"hotel",st:"chain",lg:"pi",b:"pi",q:"Newbury",lat:51.4010,lng:-1.3230,p:null,jn:"M4 J13",a:"Newbury & Hungerford",soldout:1,
+ note:"SOLD OUT for 14 Aug — and so is Newbury South (A339). Listed so you don't waste the tap."},
+
+/* ================= HOTELS — SWINDON (M4 J15–J16) ================= */
+{n:"Premier Inn Swindon Town Centre",c:"hotel",st:"chain",lg:"pi",b:"pi",q:"Swindon Town Centre",lat:51.5620,lng:-1.7790,p:104,jn:"M4 J15",a:"Swindon",
+ note:"⭐ Cheapest Premier Inn on the route. Premier Plus rooms, air-con, 5 min walk to Nando's at Regent Circus."},
+{n:"Marsh Farm Hotel, Royal Wootton Bassett",c:"hotel",st:"country",lat:51.5340,lng:-1.8930,p:111,jn:"M4 J16",a:"Swindon",
+ note:"Cheapest two rooms near J16. Free parking, quiet farmland setting."},
+{n:"ibis budget Swindon Town Centre",c:"hotel",st:"chain",lg:"accor",lat:51.5630,lng:-1.7820,p:120,jn:"M4 J15",a:"Swindon",
+ note:"Cheap, central, breakfast included. Rooms are genuinely tiny."},
+{n:"Leonardo Hotel Swindon",c:"hotel",st:"chain",lg:"leonardo",lat:51.5620,lng:-1.7830,p:122,jn:"M4 J15",a:"Swindon",
+ note:"8.6/10, four-star, air-conditioned, town centre. Best value 4-star on the route."},
+{n:"Holiday Inn Express Swindon City Centre",c:"hotel",st:"chain",lg:"ihg",lat:51.5640,lng:-1.7810,p:124,jn:"M4 J15",a:"Swindon",
+ note:"Free hot breakfast included — handy for an early Saturday getaway."},
+{n:"DoubleTree by Hilton Swindon",c:"hotel",st:"chain",lg:"hilton",lat:51.5670,lng:-1.8340,p:127,jn:"M4 J16",a:"Swindon",
+ note:"Free cancellation, no prepayment. The warm cookie on arrival buys goodwill."},
+{n:"The Saracens Head, Highworth",c:"hotel",st:"inn",lat:51.6310,lng:-1.7100,p:130,jn:"M4 J15",a:"Swindon",
+ note:"Market-town coaching inn. Free parking."},
+{n:"The Wiltshire Hotel, Golf & Leisure Resort",c:"hotel",st:"country",lat:51.5150,lng:-1.9330,p:130,jn:"M4 J16",a:"Swindon",
+ note:"Pool and golf. Note the 5.1/10 guest score — cheap for a reason."},
+{n:"Premier Inn Swindon Central",c:"hotel",st:"chain",lg:"pi",b:"pi",q:"Swindon Central",lat:51.5490,lng:-1.7970,p:130,jn:"M4 J15",a:"Swindon",
+ note:"Restaurant on site, free parking."},
+{n:"Holiday Inn Swindon",c:"hotel",st:"chain",lg:"ihg",lat:51.5460,lng:-1.8040,p:132,jn:"M4 J15",a:"Swindon",
+ note:"Swimming pool, spa, gym. Dependable family choice."},
+{n:"Village Hotel Swindon",c:"hotel",st:"chain",lg:"village",lat:51.5470,lng:-1.8030,p:136,jn:"M4 J16",a:"Swindon",
+ note:"Pool and leisure club."},
+{n:"The Angel in Wootton Bassett",c:"hotel",st:"inn",lat:51.5390,lng:-1.9070,p:136,jn:"M4 J16",a:"Swindon",
+ note:"High-street coaching inn. King ensuite rooms."},
+{n:"The Village Inn, Liddington",c:"hotel",st:"inn",lat:51.5320,lng:-1.7020,p:141,jn:"M4 J15",a:"Swindon",dOverride:1.2,
+ note:"⭐ Best detour-to-quality ratio on the route. Barely a mile off J15. Deluxe double plus a family room, breakfast included, free cancellation."},
+{n:"The Sun Inn, Coate",c:"hotel",st:"inn",lat:51.5410,lng:-1.7550,p:141,jn:"M4 J15",a:"Swindon",
+ note:"8.5/10. Next to Coate Water Country Park — lake and playground before you set off."},
+{n:"Premier Inn Swindon West (M4 J16)",c:"hotel",st:"chain",lg:"pi",b:"pi",q:"Swindon West",lat:51.5570,lng:-1.8630,p:144,jn:"M4 J16",a:"Swindon",dOverride:0.8,
+ note:"⭐ Under a mile from J16. Air-con, restaurant, free parking. The classic motorway-stop Premier Inn."},
+{n:"Holiday Inn Express Swindon West",c:"hotel",st:"chain",lg:"ihg",lat:51.5560,lng:-1.8410,p:150,jn:"M4 J16",a:"Swindon",
+ note:"Free hot breakfast, free parking, free cancellation."},
+{n:"Premier Inn Swindon North",c:"hotel",st:"chain",lg:"pi",b:"pi",q:"Swindon North",lat:51.6000,lng:-1.7860,p:162,jn:"M4 J15",a:"Swindon",
+ note:"Quieter edge-of-town option."},
+{n:"The Churchill, Royal Wootton Bassett",c:"hotel",st:"inn",lg:"gk",lat:51.5390,lng:-1.9060,p:170,jn:"M4 J16",a:"Swindon",
+ note:"8.8/10 and it has actual FAMILY ROOMS — double plus two sofa beds, air-con, free cancellation. Strong pick with kids."},
+{n:"The Schoolhouse Hotel",c:"hotel",st:"country",lat:51.5960,lng:-1.7290,p:170,jn:"M4 J15",a:"Swindon",
+ note:"8.5/10, breakfast included, free cancellation."},
+{n:"The Goddard Arms",c:"hotel",st:"inn",lat:51.5550,lng:-1.7770,p:177,jn:"M4 J15",a:"Swindon",
+ note:"Old Town Swindon — far nicer streets and restaurants than the new centre. Breakfast included."},
+{n:"Delta Hotels by Marriott Swindon",c:"hotel",st:"chain",lg:"marriott",lat:51.5480,lng:-1.7620,p:178,jn:"M4 J15",a:"Swindon",
+ note:"Pool, air-con, four-star."},
+{n:"Lydiard Park Hotel",c:"hotel",st:"country",lat:51.5540,lng:-1.8410,p:190,jn:"M4 J16",a:"Swindon",
+ note:"Next to Lydiard Park — huge free playground and 260 acres of parkland on the doorstep."},
+{n:"Stanton House Hotel",c:"hotel",st:"country",lat:51.5860,lng:-1.7020,p:196,jn:"M4 J15",a:"Swindon",
+ note:"Japanese-owned country house with big grounds and an unexpectedly good Japanese restaurant."},
+{n:"The Fox & Hounds, Wroughton",c:"hotel",st:"inn",lat:51.5230,lng:-1.7970,p:210,jn:"M4 J16",a:"Swindon",
+ note:"8.7/10, location scored 9.4. Free parking, free cancellation."},
+{n:"The White Hart, Stratton",c:"hotel",st:"inn",lat:51.5860,lng:-1.7500,p:224,jn:"M4 J15",a:"Swindon",
+ note:"8.8/10 — highest-rated in Swindon proper. King rooms, breakfast included, free cancellation."},
+{n:"Blunsdon House Hotel (BW Premier Collection)",c:"hotel",st:"country",lg:"bw",lat:51.6100,lng:-1.7830,p:234,jn:"M4 J15",a:"Swindon",
+ note:"Pool, grounds, twin rooms sleeping four. A proper old-school family hotel."},
+{n:"Helen Browning's Royal Oak, Bishopstone",c:"hotel",st:"inn",lat:51.5680,lng:-1.6470,p:263,jn:"M4 J15",a:"Swindon",
+ note:"⭐ 9.3/10 — the best-rated place on the entire route. Organic farm pub, two family rooms, breakfast included. Worth the detour."},
+{n:"The Highworth Hotel",c:"hotel",st:"inn",lat:51.6300,lng:-1.7100,p:298,jn:"M4 J15",a:"Swindon",
+ note:"8.6/10. Superior doubles, breakfast included, free cancellation, no prepayment."},
+
+/* ================= HOTELS — MARLBOROUGH ================= */
+{n:"The Bear, Marlborough",c:"hotel",st:"inn",lat:51.4180,lng:-1.7290,p:150,jn:"M4 J15",a:"Marlborough",
+ note:"Coaching inn on one of the handsomest high streets in England. Good value."},
+{n:"Castle and Ball, Marlborough",c:"hotel",st:"inn",lg:"gk",lat:51.4180,lng:-1.7270,p:253,jn:"M4 J15",a:"Marlborough",
+ note:"Greene King coaching inn, 300 yards from the shops and the PizzaExpress."},
+
+/* ================= HOTELS — WEST OF SWINDON: CHIPPENHAM, CORSHAM, DEVIZES (M4 J17) ================= */
+{n:"The Pelican Inn, Devizes",c:"hotel",st:"inn",lat:51.3560,lng:-1.9950,p:171,jn:"M4 J16",a:"West of Swindon",
+ note:"Good value if you fancy Avebury or Devizes in the morning."},
+{n:"The White Hart, Atworth",c:"hotel",st:"inn",lat:51.3760,lng:-2.2000,p:179,jn:"M4 J17",a:"West of Swindon",
+ note:"Handy for Lacock Abbey and its Pokémon zone the next morning."},
+{n:"The Jolly Huntsman, Kington St Michael",c:"hotel",st:"inn",lat:51.5040,lng:-2.1290,p:200,jn:"M4 J17",a:"West of Swindon",
+ note:"A mile off J17. Pushes you 20 minutes further west, which shaves the Saturday drive."},
+{n:"Premier Inn Chippenham",c:"hotel",st:"chain",lg:"pi",b:"pi",q:"Chippenham",lat:51.4620,lng:-2.1180,p:220,jn:"M4 J17",a:"West of Swindon",
+ note:"Predictable and easy, four miles off J17."},
+{n:"THE RED LION, Cricklade",c:"hotel",st:"inn",lat:51.6390,lng:-1.8580,p:230,jn:"M4 J15",a:"West of Swindon",
+ note:"Cricklade's brewpub with rooms — its own microbrewery on site."},
+{n:"Lansdowne Strand, Calne",c:"hotel",st:"inn",lat:51.4370,lng:-2.0060,p:243,jn:"M4 J16",a:"West of Swindon",
+ note:"16th-century coaching inn in Calne, near Bowood and Avebury."},
+{n:"Cricklade House Hotel",c:"hotel",st:"country",lat:51.6350,lng:-1.8700,p:248,jn:"M4 J15",a:"West of Swindon",
+ note:"Country house with golf, north of Swindon towards the Cotswold Water Park."},
+{n:"The Rudloe, Corsham (Marco Pierre White)",c:"hotel",st:"country",lat:51.4130,lng:-2.2300,p:279,jn:"M4 J17",a:"West of Swindon",
+ note:"MPW-owned country house near Bath. Eccentric, comfortable, good food."},
+{n:"The Northey Arms, Box",c:"hotel",st:"inn",lat:51.4180,lng:-2.2530,p:280,jn:"M4 J17",a:"West of Swindon",
+ note:"Smart stone inn between Chippenham and Bath."},
+{n:"The Crown Inn, Rodmarton",c:"hotel",st:"inn",lat:51.6810,lng:-2.0930,p:290,jn:"M4 J15",a:"West of Swindon",
+ note:"Cotswold village inn towards Cirencester."},
+{n:"White Hart Hotel, Cricklade",c:"hotel",st:"inn",lat:51.6390,lng:-1.8570,p:290,jn:"M4 J15",a:"West of Swindon",
+ note:"High-street coaching inn in a small Wiltshire market town."},
+{n:"Guyers House Hotel, Corsham",c:"hotel",st:"country",lat:51.4350,lng:-2.1900,p:290,jn:"M4 J17",a:"West of Swindon",
+ note:"Country house with gardens and a well-regarded restaurant."},
+{n:"Stanton Manor Hotel",c:"hotel",st:"country",lat:51.5250,lng:-2.1180,p:297,jn:"M4 J17",a:"West of Swindon",
+ note:"Country house minutes from J17 — one of the closest nice places to the motorway."},
+{n:"Best Western Plus Angel Hotel, Chippenham",c:"hotel",st:"chain",lg:"bw",lat:51.4590,lng:-2.1170,p:298,jn:"M4 J17",a:"West of Swindon",
+ note:"Town centre, 150 yards from the shops."},
+{n:"The Kings Arms Hotel, Melksham",c:"hotel",st:"inn",lat:51.3740,lng:-2.1380,p:314,jn:"M4 J17",a:"West of Swindon",
+ note:"Market-town inn south of Chippenham."},
+{n:"Pear Tree Inn, Whitley",c:"hotel",st:"inn",lat:51.3860,lng:-2.1660,p:320,jn:"M4 J17",a:"West of Swindon",
+ note:"Well-known Wiltshire dining pub with rooms, in farmland near Melksham."},
+{n:"The Vale Hotel, Cricklade",c:"hotel",st:"country",lat:51.6390,lng:-1.8600,p:336,jn:"M4 J15",a:"West of Swindon",
+ note:"Near the Cotswold Water Park — lakes, watersports, beaches."},
+{n:"Stratton House Hotel & Spa, Cirencester",c:"hotel",st:"country",lat:51.7250,lng:-1.9800,p:404,jn:"M4 J15",a:"West of Swindon",
+ note:"17th-century manor with a spa, on the edge of Cirencester."},
+{n:"Kings Head Hotel, Cirencester",c:"hotel",st:"country",lat:51.7180,lng:-1.9690,p:528,jn:"M4 J15",a:"West of Swindon",
+ note:"Smart boutique hotel on Cirencester market place. Spa, good bar."},
+{n:"Ingleside House, Cirencester",c:"hotel",st:"country",lat:51.7150,lng:-1.9720,p:540,jn:"M4 J15",a:"West of Swindon",
+ note:"Small Georgian house hotel, walkable to the centre."},
+{n:"Premier Inn Cirencester",c:"hotel",st:"chain",lg:"pi",b:"pi",q:"Cirencester",lat:51.7160,lng:-1.9640,p:565,jn:"M4 J15",a:"West of Swindon",
+ note:"£565 for a Premier Inn tells you exactly how busy the Cotswolds are that weekend."},
+{n:"Beechfield House, Beanacre",c:"hotel",st:"country",lat:51.3900,lng:-2.1440,p:573,jn:"M4 J17",a:"West of Swindon",
+ note:"Victorian country house in eight acres near Lacock."},
+{n:"The Methuen Arms, Corsham",c:"hotel",st:"inn",lat:51.4340,lng:-2.1870,p:584,jn:"M4 J17",a:"West of Swindon",
+ note:"Georgian coaching inn with a serious kitchen, in handsome Corsham."},
+
+/* ================= SERVICES ================= */
+{n:"South Mimms Services",c:"services",lat:51.6960,lng:-0.2280,jn:"M25 J23",a:"M25",op:"Welcome Break",
+ br:["sbux","kfc","bk","whs","waitrose"],tesla:-1,
+ note:"First proper stop, roughly 45 minutes from home. Tesla not confirmed here — Gridserve and others are."},
+{n:"Reading Services",c:"services",lat:51.4360,lng:-1.0430,jn:"M4 J11–12",a:"M4",op:"Moto",
+ br:["ms","costa","bk","greggs","whs"],tesla:1,teslaN:"12 ultra-rapid Tesla, plus 16 Gridserve, 8 BP Pulse, 8 Osprey — 44 connectors total",
+ note:"⭐ Best-charged services on the M4. Both carriageways."},
+{n:"Chieveley Services",c:"services",lat:51.4530,lng:-1.2830,jn:"M4 J13",a:"M4",op:"Moto",
+ br:["costa","bk","ms","whs"],tesla:0,
+ note:"On the M4/A34 junction. Gridserve chargers only — no Tesla."},
+{n:"Membury Services",c:"services",lat:51.4580,lng:-1.5350,jn:"M4 J14–15",a:"M4",op:"Welcome Break",
+ br:["sbux","kfc","waitrose","whs"],tesla:1,teslaN:"8 ultra-rapid Tesla (150kW) plus 12 Gridserve, both sides",
+ note:"⭐ Last westbound stop before Swindon, and it has a Days Inn attached if you want to stop for the night."},
+{n:"Leigh Delamere Services",c:"services",lat:51.5130,lng:-2.1750,jn:"M4 J17–18",a:"M4",op:"Moto",
+ br:["ms","costa","bk","greggs","whs"],tesla:-1,teslaN:"Reported 16 × 250kW Superchargers WESTBOUND ONLY — not listed by every charger database, so check the app before relying on it",
+ note:"Last M4 services before the M5. Westbound and eastbound sites are not connected — you can't cross over."},
+{n:"Gordano Services",c:"services",lat:51.4630,lng:-2.7480,jn:"M5 J19",a:"M5",op:"Welcome Break",
+ br:["sbux","kfc","waitrose","whs"],tesla:1,teslaN:"12 ultra-rapid Tesla (up to 130kW) plus 12 Gridserve and 6 BP Pulse — 30 connectors",
+ note:"⭐ Best-equipped M5 stop in the north. Good Saturday-morning coffee break."},
+{n:"Sedgemoor Services",c:"services",lat:51.2900,lng:-2.9100,jn:"M5 J21–22",a:"M5",op:"Roadchef / Welcome Break",
+ br:["costa","mcd","whs"],tesla:0,
+ note:"Southbound is Welcome Break, northbound Roadchef. Gridserve and InstaVolt only — no Tesla."},
+{n:"Bridgwater Services",c:"services",lat:51.0930,lng:-2.9880,jn:"M5 J24",a:"M5",op:"Moto",
+ br:["costa","bk","greggs","whs"],tesla:-1,
+ note:"Charger data patchy for this one — assume Gridserve, verify Tesla in the app."},
+{n:"Taunton Deane Services",c:"services",lat:50.9700,lng:-3.1500,jn:"M5 J25–26",a:"M5",op:"Roadchef / Moto",
+ br:["costa","mcd","whs"],tesla:1,teslaN:"8 ultra-rapid Tesla plus 12 Gridserve and 6 Shell Recharge — 26 connectors",
+ note:"⭐⭐ THE key stop. Nicest M5 services (grass, trees, actual air) AND the last Tesla Supercharger before you leave the motorway at J27. Charge here."},
+{n:"Tiverton Services",c:"services",lat:50.8990,lng:-3.3900,jn:"M5 J27",a:"M5",op:"independent",check:1,
+ br:["bp","costa"],tesla:0,
+ note:"Small fuel-and-coffee stop at the junction where you leave for the A361. Not a full motorway services — don't count on much. Verify before relying on it."},
+{n:"Cullompton Services",c:"services",lat:50.8570,lng:-3.3900,jn:"M5 J28",a:"M5",op:"Extra",
+ br:["costa","subway"],tesla:0,
+ note:"⚠️ This is PAST your J27 turn-off. Only useful if you overshoot or detour to Diggerland."},
+{n:"South Molton Services",c:"services",lat:51.0180,lng:-3.8210,jn:"A361",a:"A361 North Devon",
+ br:["bp","costa"],tesla:0,
+ note:"The only real stop on the North Devon Link Road. Fuel, cafe, toilets. Take it if anyone's wobbling."},
+{n:"Roundswell, Barnstaple (A39)",c:"services",lat:51.0620,lng:-4.0700,jn:"A39",a:"A361 North Devon",
+ br:["tesco","costa"],tesla:0,
+ note:"Fuel and a big Tesco just before Braunton — the last easy supermarket before Woolacombe."},
+
+/* ================= FOOD — CHAINS ================= */
+{n:"Swindon Designer Outlet",c:"food",lat:51.5680,lng:-1.7980,jn:"M4 J16",a:"Swindon",
+ br:["waga","fg","pe"],
+ note:"⭐⭐ THE food stop of the trip. Wagamama, Five Guys and PizzaExpress in one enormous free car park, two miles off J16, inside the old Great Western railway works. The Entertainer is here too if Pokémon cards are required."},
+{n:"The Oracle, Reading",c:"food",lat:51.4530,lng:-0.9730,jn:"M4 J11",a:"Reading",
+ br:["waga","nandos","pe"],
+ note:"⭐ Riverside restaurant terrace: Wagamama on Bridge Street, plus Nando's and PizzaExpress. Multi-storey parking, 3 miles off J11."},
+{n:"Wagamama — Bristol Cribbs Causeway",c:"food",lat:51.5220,lng:-2.6060,jn:"M5 J17",a:"Bristol",br:["waga","nandos"],
+ note:"⭐ A mile off M5 J17 — the single easiest Wagamama detour on the Devon leg, and there's a Nando's next door."},
+{n:"Wagamama — Bristol Cabot Circus",c:"food",lat:51.4590,lng:-2.5850,jn:"M32 / M4 J19",a:"Bristol",br:["waga","honest"],
+ note:"City centre. Honest Burgers took over the old GBK site here, so it's your burger option too."},
+{n:"Wagamama — Bath SouthGate",c:"food",lat:51.3770,lng:-2.3570,jn:"M4 J18",a:"Bath",br:["waga","fg"],
+ note:"Next to Bath Spa station. Five Guys is a two-minute walk at Saw Close. Worth it only if Bath is a deliberate detour."},
+{n:"Wagamama — Exeter Princesshay",c:"food",lat:50.7240,lng:-3.5290,jn:"M5 J30",a:"Exeter",br:["waga","fg"],
+ note:"⚠️ Past your J27 turn-off. Five Guys on Queen Street is a few minutes away."},
+{n:"Nando's — Swindon, Regent Circus",c:"food",lat:51.5580,lng:-1.7810,jn:"M4 J15",a:"Swindon",br:["nandos"],
+ note:"⭐ Open to 22:30 Thu–Sat. Walkable from Premier Inn Swindon Town Centre and the ibis budget — the obvious Friday dinner if you stop in Swindon."},
+{n:"Nando's — Taunton, North Street",c:"food",lat:50.9190,lng:-3.1010,jn:"M5 J25",a:"Taunton",br:["nandos","pe"],
+ note:"Town centre, 3 min from the Orchard centre. PizzaExpress is on Bridge Street nearby. Last Nando's before North Devon."},
+{n:"Nando's — Exeter, Alphington",c:"food",lat:50.7060,lng:-3.5310,jn:"M5 J31",a:"Exeter",br:["nandos"],
+ note:"⚠️ Retail park past the turn-off. Easy parking if you're going that way anyway."},
+{n:"Nando's — Barnstaple",c:"food",lat:51.0760,lng:-4.0510,jn:"A361",a:"A361 North Devon",br:["nandos"],check:1,
+ note:"Listed by Nando's for Barnstaple but I could not confirm the exact address. Tap Website before you commit hungry children to the drive."},
+{n:"PizzaExpress — Newbury, Market Place",c:"food",lat:51.4010,lng:-1.3230,jn:"M4 J13",a:"Newbury & Hungerford",br:["pe"],
+ note:"⭐ The most useful chain restaurant between Reading and Swindon. Newbury market place, a few minutes off J13."},
+{n:"PizzaExpress — Marlborough High Street",c:"food",lat:51.4180,lng:-1.7280,jn:"M4 J15",a:"Marlborough",br:["pe"],
+ note:"On the wide Georgian high street. Good if you're staying at The Bear or Castle and Ball."},
+{n:"Five Guys — Bath, Saw Close",c:"food",lat:51.3820,lng:-2.3610,jn:"M4 J18",a:"Bath",br:["fg"],
+ note:"Bath city centre. Nearest Five Guys to the M4 west of Swindon."},
+{n:"Five Guys — Bristol Broadmead",c:"food",lat:51.4580,lng:-2.5860,jn:"M32 / M4 J19",a:"Bristol",br:["fg"],
+ note:"City centre, near Cabot Circus."},
+{n:"Five Guys — Bristol Clifton",c:"food",lat:51.4550,lng:-2.6070,jn:"M5 J19",a:"Bristol",br:["fg"],
+ note:"Queens Road, Clifton."},
+{n:"Five Guys — Exeter, Queen Street",c:"food",lat:50.7250,lng:-3.5330,jn:"M5 J30",a:"Exeter",br:["fg"],
+ note:"⚠️ Past the turn-off. Note there is NO Five Guys in Reading, Newbury, Taunton or at Cribbs Causeway — Swindon Designer Outlet is your best shot."},
+{n:"Honest Burgers — Bristol Cabot Circus",c:"food",lat:51.4590,lng:-2.5850,jn:"M32 / M4 J19",a:"Bristol",br:["honest"],
+ note:"Honest Burgers bought 12 GBK sites and converted them — this Bristol one is among them. Effectively the GBK replacement out west."},
+{n:"GBK — Bracknell",c:"food",lat:51.4160,lng:-0.7490,jn:"M4 J10",a:"Reading",br:["gbk"],
+ note:"⭐ <b>Your nearest GBK to the route, and it is not close.</b> Unit 5E, Eagle Lane, Northern Retail Quarter, RG12 1BG. About 8 miles south of M4 J10 — a genuine 20-minute round-trip detour before Reading."},
+{n:"GBK — Chiswick",c:"food",lat:51.4920,lng:-0.2670,jn:"A4 / M4 J2",a:"M4 corridor",br:["gbk"],
+ note:"131 Chiswick High Road, W4 2ED. Only relevant if you drive out of London on the A4/M4 instead of the M25 — it's the wrong side of town for South Woodford."},
+{n:"GBK — Oxford",c:"food",lat:51.7540,lng:-1.2610,jn:"M4 J13 + A34",a:"M4 corridor",br:["gbk"],
+ note:"29-31 George Street, OX1 2AY. 25 miles north of M4 J13 up the A34 — a real excursion, not a pit stop."},
+{n:"GBK — Lakeside, Thurrock",c:"food",lat:51.4870,lng:0.2820,jn:"M25 J30",a:"M25",br:["gbk"],
+ note:"⚠️ Closest GBK to <b>home</b>, not to the route — it's east on the M25, the opposite direction to Woolacombe. Worth knowing for a pre-trip dinner, useless on the day."},
+
+/* ================= NATIONAL TRUST ================= */
+{n:"Cliveden",c:"nt",lat:51.5580,lng:-0.6890,jn:"M4 J7",a:"M4 corridor",pk:"zone",
+ note:"⭐ POKÉMON ZONE — 'Pokémon joins Cliveden's Summer of Play'. Plus vast gardens, a maze and woodland play. On your way if you come down the M4 rather than the M25."},
+{n:"Basildon Park",c:"nt",lat:51.4880,lng:-1.0970,jn:"M4 J12",a:"Reading",pk:"stickers",
+ note:"Georgian mansion and parkland, 4 miles off J12. Summer of Play runs through August so the Pokémon sticker booklet should be here, but no dedicated zone confirmed."},
+{n:"Ashdown House",c:"nt",lat:51.5540,lng:-1.5850,jn:"M4 J14",a:"Newbury & Hungerford",
+ note:"Chalk-white Dutch-style hunting lodge high on the Downs. Very limited opening — check before detouring."},
+{n:"Avebury",c:"nt",lat:51.4280,lng:-1.8540,jn:"M4 J16",a:"Swindon",pk:"stickers",
+ note:"Stone circle you can walk up to and touch, with a village and pub inside it. Summer of Play 23 Jul–31 Aug: hoopla, skittles, tin can alley, puppet theatre, sandpit digs. Sticker booklet yes; no dedicated Pokémon zone listed."},
+{n:"Great Coxwell Barn",c:"nt",lat:51.6470,lng:-1.6180,jn:"M4 J15",a:"Swindon",
+ note:"Enormous medieval tithe barn. A genuinely impressive 15-minute stop."},
+{n:"Lacock Abbey & Village",c:"nt",lat:51.4150,lng:-2.1220,jn:"M4 J17",a:"West of Swindon",pk:"zone",
+ note:"⭐⭐ POKÉMON ZONE — TCG trading, mega games, skill challenges and sticker collecting, plus craft sessions and a mobile climbing wall. And the cloisters are Hogwarts corridors from the Harry Potter films. Best combined stop on the route."},
+{n:"Dyrham Park",c:"nt",lat:51.4830,lng:-2.3760,jn:"M4 J18",a:"Bath",pk:"trail",
+ note:"⭐⭐⭐ MEGA EVOLUTION TCG TRAIL — one of only 16 National Trust places in the country running it. Find 10 Mega Evolution Pokémon, complete the interactive challenges, get the photo in front of the Mega Evolution backdrop. Runs to 6 Sept. Three miles off J18, with a deer park and huge Severn views. This is the Pokémon stop of the trip."},
+{n:"Tyntesfield",c:"nt",lat:51.4340,lng:-2.7100,jn:"M5 J19",a:"Bristol",pk:"zone",
+ note:"⭐⭐ POKÉMON ZONE — challenges, mega games, trading and stickers, alongside a straw castle, archery and a maze. Victorian Gothic fantasy house, 5 miles / 7 min off the M5. The best all-round family stop on the Devon leg."},
+{n:"Clevedon Court",c:"nt",lat:51.4340,lng:-2.8300,jn:"M5 J20",a:"Bristol",
+ note:"14th-century manor. Small, and limited opening days."},
+{n:"Barrington Court",c:"nt",lat:50.9530,lng:-2.8900,jn:"M5 J25",a:"Taunton",pk:"stickers",
+ note:"Empty Tudor house you can wander freely — the echo is half the fun. Kitchen garden and orchard."},
+{n:"Knightshayes, Tiverton",c:"nt",lat:50.9200,lng:-3.4790,jn:"M5 J27",a:"Tiverton",pk:"stickers",
+ note:"Best-placed NT stop on the Devon leg — minutes from J27 where you leave the M5. Woodland play area and walled kitchen garden. No Pokémon zone confirmed."},
+{n:"Killerton",c:"nt",lat:50.7960,lng:-3.4570,jn:"M5 J28",a:"Exeter",pk:"zone",
+ note:"⭐⭐ POKÉMON ZONE — 18 Jul–6 Sep, TCG play, skill challenges and Mega Evolution stickers, on top of seven separate play areas. ⚠️ It's past your J27 turn-off, so this is a deliberate Saturday choice rather than an en-route stop."},
+{n:"Arlington Court & Carriage Museum",c:"nt",lat:51.1330,lng:-3.9800,jn:"A39",a:"Woolacombe",pk:"stickers",
+ note:"⭐ Closest NT property to Woolacombe. Horse-drawn carriage rides, bat cam, woodland trails. The obvious rainy-day-from-the-beach plan."},
+{n:"Baggy Point, Croyde",c:"nt",lat:51.1370,lng:-4.2440,jn:"A361",a:"Woolacombe",
+ note:"Headland walk 10 minutes from Woolacombe. Seals, rock pools, whale bones on the trail."},
+{n:"Woolacombe Warren & Mortehoe",c:"nt",lat:51.1730,lng:-4.2100,jn:"B3343",a:"Woolacombe",
+ note:"NT-protected dunes directly behind your beach. Free."},
+{n:"Heddon Valley, Exmoor",c:"nt",lat:51.2140,lng:-3.9130,jn:"A39",a:"Woolacombe",
+ note:"Steep wooded valley running down to a pebble cove. A good half-day from Woolacombe."},
+{n:"Watersmeet, Lynmouth",c:"nt",lat:51.2200,lng:-3.8180,jn:"A39",a:"Woolacombe",
+ note:"Riverside tea garden where two rivers meet. Easy walk, cream teas."}
+];
+
+/* ============================================================
+   THE PLAN — depart South Woodford 18:00 Fri 14 Aug
+   drv = driving minutes on this leg (realistic, incl. expected traffic)
+   ============================================================ */
+const ITIN=[
+{day:"FRIDAY 14 AUGUST",sub:"Evening run west &middot; ~120 miles &middot; ~3h15 door to door"},
+{t:"18:00",n:"Depart South Woodford",k:"",mi:0,drv:0,ll:[51.5910,0.0290],
+ note:"<b>Eat before you go.</b> With a 6pm start you'll be arriving at the hotel around 21:30 — too late to rely on a restaurant with kids. A proper meal at home now saves the whole evening."},
+{t:"18:00–18:50",n:"M11 J4 → M25 J27 → M25 anticlockwise",k:"drive",mi:22,drv:50,
+ note:"⚠️ The worst 50 minutes of the trip. Friday 6pm in August, M25 J25–J21 will crawl. Budget 50 min for what is normally 30."},
+{t:"18:50",n:"South Mimms Services (M25 J23)",k:"stop",mi:22,drv:0,ll:[51.6960,-0.2280],
+ note:"Optional. Only stop if someone needs the loo — you've barely started and stopping here costs you the light. Starbucks, KFC, Burger King, Waitrose."},
+{t:"18:50–20:15",n:"M25 J23 → J15 → M4 west",k:"drive",mi:50,drv:85,
+ note:"M25 J23 down to J15 is the second pinch point; it should ease past J16 (M40). Once you're on the M4 heading west it opens up."},
+{t:"20:15",n:"Reading Services (M4 J11–12)",k:"stop",mi:72,drv:0,ll:[51.4360,-1.0430],
+ note:"⭐ <b>The one stop that matters on Friday.</b> Legs, loos, coffee, M&S Simply Food if you skipped dinner. <b>12 Tesla Superchargers</b> — charge here, it's the best-equipped stop on the M4. Allow 20 minutes."},
+{t:"20:35–21:20",n:"M4 J12 → J16 Swindon",k:"drive",mi:38,drv:45,
+ note:"Clear running by now. Membury (J14–15) has 8 Tesla stalls if you'd rather split the charge."},
+{t:"21:20",n:"Check in — Swindon or Chippenham",k:"sleep",mi:110,drv:0,ll:[51.5570,-1.8630],
+ note:"⭐ <b>Premier Inn Swindon West (M4 J16) — £144</b>, 0.8 mi off the junction, 24-hour reception, free parking. 25 min from Dyrham Park in the morning.<br><br><b>Cheaper:</b> Marsh Farm Hotel £111. <b>Closer to Dyrham (+15 min tonight, −15 min tomorrow):</b> The Jolly Huntsman, Kington St Michael £200, or Premier Inn Chippenham £220 — both at J17.<br><br><b>Still hungry?</b> Nando's Swindon at Regent Circus serves until 22:30 Thu–Sat. It's the only realistic sit-down option at this hour."},
+
+{day:"SATURDAY 15 AUGUST",sub:"Dyrham Park &amp; the run to Devon &middot; ~130 miles &middot; ~3h driving"},
+{t:"08:00–09:15",n:"Breakfast, pack, no rush",k:"stop",mi:110,drv:0,
+ note:"There is <b>no advantage to leaving early</b> — Dyrham Park's car park doesn't open until 10:00, and Woolacombe check-in is usually 15:00–16:00. Take the morning slowly."},
+{t:"09:15–09:45",n:"M4 J16 → J18 → A46 south",k:"drive",mi:22,drv:30,
+ note:"Two miles south of J18 (Tormarton interchange) on the A46. Sat nav SN14 8HY, and enter the car park from the A46."},
+{t:"10:00–12:15",n:"DYRHAM PARK — Pokémon TCG Mega Evolution Trail",k:"pk",mi:132,drv:0,ll:[51.4805,-2.3629],
+ note:"⭐⭐⭐ <b>The reason for the whole detour.</b> One of only 16 National Trust places running the Mega Evolution Trail. Drop-in, <b>no booking needed</b>, running 8 Aug – 2 Sep, 10:00–17:00.<br><br><b>Parkland &amp; car park open 10:00</b> · tea-room 10:30 · house 11:30 · last entry 16:00.<br><br><b>Do this:</b> trail around the 270-acre parkland (allow 1.5h), then the play area and café at Old Lodge. Skip the house unless it's raining — the trail is the point.<br><br><b>Money:</b> family ticket £57.50 (£63.30 with Gift Aid) — <b>NT membership pays for itself in this one visit</b>. Parking £4/day, free for members. Car park uses the <b>JustPark app, code 80574 — download it before you arrive, phone signal on site is patchy</b>. That patchy signal also matters if anyone's playing Pokémon GO.<br><br>Assistance dogs only, because of the deer herd."},
+{t:"12:15–13:50",n:"A46 → M4 J18 → J20 Almondsbury → M5 south",k:"drive",mi:62,drv:95,
+ note:"⚠️ <b>The Almondsbury interchange (M4/M5) is the single worst traffic hotspot on the UK motorway network in summer</b>, and Saturday 10:00–15:00 is the worst window — holiday changeover day. Expect the M5 J15–J23 stretch to cost you an extra 20–40 min. Normally 65 min; budget 95."},
+{t:"13:50–14:35",n:"Taunton Deane Services (M5 J25–26)",k:"stop",mi:194,drv:0,ll:[50.9700,-3.1500],
+ note:"⭐⭐ <b>Lunch here, and charge here.</b> This is the last Tesla Supercharger (8 stalls) before you leave the motorway at J27 — the A361 has almost nothing. Nicest services on the M5: grass, trees, actual air. Costa and McDonald's."},
+{t:"14:35–16:00",n:"M5 J27 → A361 → Barnstaple → Woolacombe",k:"drive",mi:55,drv:85,
+ note:"Leave the M5 at J27. The A361 North Devon Link Road is slow in August and Barnstaple can jam badly. Last easy supermarket is the Tesco at Roundswell just before Braunton — worth 15 min if you need milk and breakfast things."},
+{t:"~16:00",n:"WOOLACOMBE BAY",k:"end",mi:249,drv:0,ll:[51.1710,-4.2080],
+ note:"Bang on typical check-in time. <b>The Saturday traffic costs you nothing you could have used</b> — you couldn't have got into the accommodation any earlier anyway.<br><br><b>Tomorrow:</b> Pokémon GO Community Day (Nickit) — Sunday 16 Aug, 14:00–17:00 local. The seafront and Marine Drive have the best stop cluster."}
+];
+
+/* ---------- real photographs (National Trust's own CDN) ---------- */
+const NTB="https://nt.global.ssl.fastly.net/binaries/content/gallery/website/national/regions/";
+const PHOTO={
+"Dyrham Park":NTB+"bath-bristol/places/dyrham-park/library/summer/the-east-front-of-dyrham-park-near-bath-south-gloucestershire-961626.jpg",
+"Lacock Abbey & Village":NTB+"wiltshire/places/lacock/library/summer/1742375.jpg",
+"Tyntesfield":NTB+"bath-bristol/places/tyntesfield/library/spring/the-house-tyntesfield-somerset-1491625.jpg",
+"Cliveden":NTB+"oxfordshire-buckinghamshire-berkshire/places/cliveden/library/summer/55366721866_78181522bb_6k.jpg",
+"Killerton":NTB+"devon/places/killerton/library/summer/killertonhouse.jpg",
+"Avebury":NTB+"wiltshire/places/avebury/library/summer/nt1g3ax---stone-circle-with-sun-star-at-avebury-in-wiltshire.jpg",
+"Basildon Park":NTB+"oxfordshire-buckinghamshire-berkshire/places/basildon-park/library/autumn/cows-basildon-park-berkshire-1308356.jpg",
+"Arlington Court & Carriage Museum":NTB+"devon/places/arlington-court-and-the-national-trust-carriage-museum/library/spring/south-front-arlington-court-devon-1238408.jpg",
+"Knightshayes, Tiverton":NTB+"devon/places/knightshayes/library/summer/1295005-web-crop.jpg",
+"Baggy Point, Croyde":NTB+"devon/places/baggy-point/library/autumn/beach-sea-sun-baggy-point-devon-1204403.jpg"
+};
+const photoOf=(p,w)=>PHOTO[p.n]?PHOTO[p.n]+"?auto=webp&width="+(w||700):null;
+
+/* ---------- geo ---------- */
+const R=6371, MI=0.621371, rad=d=>d*Math.PI/180;
+function haversine(a,b,c,d){
+  const dLat=rad(c-a),dLng=rad(d-b);
+  const h=Math.sin(dLat/2)**2+Math.cos(rad(a))*Math.cos(rad(c))*Math.sin(dLng/2)**2;
+  return 2*R*Math.asin(Math.sqrt(h))*MI;
+}
+function distToSeg(px,py,ax,ay,bx,by){
+  const kx=Math.cos(rad(px));
+  const Px=py*kx,Py=px,Ax=ay*kx,Ay=ax,Bx=by*kx,By=bx;
+  const dx=Bx-Ax,dy=By-Ay;
+  let t=(dx||dy)?((Px-Ax)*dx+(Py-Ay)*dy)/(dx*dx+dy*dy):0;
+  t=Math.max(0,Math.min(1,t));
+  const cx=Ax+t*dx,cy=Ay+t*dy;
+  return {d:Math.sqrt((cy-Py)**2+(cx-Px)**2)*111.32*MI,t};
+}
+const CUM=[0];
+for(let i=1;i<ROUTE.length;i++)CUM[i]=CUM[i-1]+haversine(ROUTE[i-1][0],ROUTE[i-1][1],ROUTE[i][0],ROUTE[i][1]);
+const TOTAL=CUM[CUM.length-1];
+function projectOnRoute(lat,lng){
+  let best={d:1e9,km:0};
+  for(let i=1;i<ROUTE.length;i++){
+    const r=distToSeg(lat,lng,ROUTE[i-1][0],ROUTE[i-1][1],ROUTE[i][0],ROUTE[i][1]);
+    if(r.d<best.d) best={d:r.d,km:CUM[i-1]+r.t*(CUM[i]-CUM[i-1])};
+  }
+  return best;
+}
+P.forEach((p,i)=>{
+  const pr=projectOnRoute(p.lat,p.lng);
+  p.routeMi=pr.km;
+  p.detour=(p.dOverride!=null)?p.dOverride:Math.round(pr.d*1.3*10)/10;
+  p.id=i;
+});
+
+/* ============================================================
+   UI LAYER — iPhone-first
+   ============================================================ */
+const COLOR={hotel:"#bf5af0",services:"#40c8e0",food:"#ff9f0a",nt:"#30d158"};
+const CATNAME={hotel:"Hotel",services:"Services",food:"Food",nt:"National Trust"};
+const listEl=document.getElementById('list'),
+      chipsEl=document.getElementById('chips'),
+      subEl=document.getElementById('subchips'),
+      locbtn=document.getElementById('locbtn'),
+      loclabel=document.getElementById('loclabel'),
+      bigtitle=document.getElementById('bigtitle'),
+      navtitle=document.getElementById('navtitle');
+
+const isApple=/iP(hone|ad|od)|Mac/.test(navigator.platform||'')||/iPhone|iPad/.test(navigator.userAgent||'');
+const mapsUrl=p=>isApple?`https://maps.apple.com/?daddr=${p.lat},${p.lng}&dirflg=d`
+                       :`https://www.google.com/maps/dir/?api=1&destination=${p.lat},${p.lng}`;
+const ll2=(lat,lng)=>isApple?`https://maps.apple.com/?daddr=${lat},${lng}&dirflg=d`
+                            :`https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}`;
+function bookUrl(p){
+  if(p.b==="pi") return "https://www.premierinn.com/gb/en/search.html?searchModel.searchTerm="+
+    encodeURIComponent(p.q||p.n)+"&ARRdd=14&ARRmm=8&ARRyyyy=2026&NIGHTS=1&ROOMS=2&ADULT1=2&CHILD1=0&COT1=0&INTTYP1=DB&ADULT2=2&CHILD2=0&COT2=0&INTTYP2=DB&BOOKINGCHANNEL=WEB&SORT=1&VIEW=2";
+  if(p.c==="hotel") return "https://www.booking.com/searchresults.html?ss="+encodeURIComponent(p.n)+
+    "&checkin=2026-08-14&checkout=2026-08-15&group_adults=4&no_rooms=2&group_children=0";
+  if(p.c==="nt") return "https://www.nationaltrust.org.uk/search?query="+encodeURIComponent(p.n);
+  return "https://duckduckgo.com/?q="+encodeURIComponent(p.n+" opening times");
+}
+const photosUrl=p=>"https://www.google.com/search?tbm=isch&q="+encodeURIComponent(p.n+" "+(p.a||"")+" hotel");
+const logoImg=(dom,cls)=>`<img class="${cls||''}" src="https://www.google.com/s2/favicons?domain=${dom}&sz=128" alt="" loading="lazy" onerror="this.style.display='none'">`;
+const fmtD=m=>m<0.19?Math.round(m*1760)+' yd':(m<10?m.toFixed(1):Math.round(m))+' mi';
+
+/* ---------- map (optional) ---------- */
+let map=null,layer=null,HAS_MAP=false,meMarker=null,meAcc=null,me=null;
+try{
+  if(typeof L!=='undefined'&&L&&L.map){
+    map=L.map('map').setView([51.35,-2.2],7);
+    L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png',
+      {maxZoom:19,attribution:'&copy; OpenStreetMap &copy; CARTO'}).addTo(map);
+    L.polyline(ROUTE,{color:'#0a84ff',weight:4,opacity:.8}).addTo(map);
+    L.circleMarker(ROUTE[0],{radius:6,color:'#fff',weight:2,fillColor:'#0a84ff',fillOpacity:1})
+      .addTo(map).bindPopup('<b>Start</b><br>South Woodford');
+    L.circleMarker(ROUTE[ROUTE.length-1],{radius:7,color:'#fff',weight:2,fillColor:'#ff375f',fillOpacity:1})
+      .addTo(map).bindPopup('<b>Woolacombe Bay</b>');
+    layer=L.layerGroup().addTo(map);
+    map.on('contextmenu',e=>{setMe(e.latlng.lat,e.latlng.lng,0);setLocLabel('Manual',true)});
+    HAS_MAP=true;
+  }
+}catch(err){HAS_MAP=false}
+
+function drawMap(items){
+  if(!HAS_MAP||!layer)return;
+  layer.clearLayers();
+  items.forEach(p=>{
+    const s=p.pk?15:12;
+    L.marker([p.lat,p.lng],{icon:L.divIcon({className:'',iconSize:[s,s],iconAnchor:[s/2,s/2],
+      html:`<div class="pin" style="width:${s}px;height:${s}px;background:${p.pk?'#ffd60a':COLOR[p.c]}"></div>`})})
+      .addTo(layer).bindPopup(
+      `<b>${p.n}</b><br><span style="color:#98989f">${p.jn} · ${p.detour} mi detour${p.p?` · <b style="color:#30d158">£${p.p}</b>`:''}</span>`+
+      (p.dist!=null?`<br><span style="color:#0a84ff"><b>${fmtD(p.dist)} from you</b></span>`:'')+
+      (p.tesla===1?'<br><span style="color:#ff8078">⚡ Tesla Supercharger</span>':'')+
+      (p.pk?`<br><span style="color:#ffd60a">✦ Pokémon ${p.pk==='trail'?'Mega Evolution Trail':p.pk==='zone'?'zone':'stickers'}</span>`:'')+
+      `<br><br><a href="${mapsUrl(p)}" target="_blank">Directions</a> · <a href="${bookUrl(p)}" target="_blank">${p.c==='hotel'?'Book':'Info'}</a>`);
+  });
+}
+
+/* ---------- tab bar ---------- */
+const ICON={
+ near:'<path d="M12 2a7 7 0 00-7 7c0 5.25 7 13 7 13s7-7.75 7-13a7 7 0 00-7-7zm0 9.5A2.5 2.5 0 1112 6.5a2.5 2.5 0 010 5z"/>',
+ plan:'<path d="M7 3h10a2 2 0 012 2v14a2 2 0 01-2 2H7a2 2 0 01-2-2V5a2 2 0 012-2zm1 5h8v1.6H8V8zm0 4h8v1.6H8V12zm0 4h5v1.6H8V16z"/>',
+ stay:'<path d="M3 7h2v6h6V9h6a4 4 0 014 4v6h-2v-3H5v3H3V7zm4.5 1A2.5 2.5 0 115 10.5 2.5 2.5 0 017.5 8z"/>',
+ eat:'<path d="M6 2v8a2 2 0 002 2v10h2V12a2 2 0 002-2V2h-1.5v6H9V2H7.5v6H6.5V2H6zm10 0c-1.7 1-2.5 3.2-2.5 6 0 2 .8 3.4 2 3.9V22h2V2h-1.5z"/>',
+ nt:'<path d="M12 3l9 5v2h-2v8h2v3H3v-3h2V10H3V8l9-5zm-5 7v8h3v-8H7zm5 0v8h3v-8h-3z"/>',
+ map:'<path d="M15 4l6-2v16l-6 2-6-2-6 2V4l6-2 6 2zm-1 2.2L10 4.9v12.9l4 1.3V6.2z"/>'
+};
+const TABS=[['near','Near me','near'],['plan','Plan','plan'],['hotel','Stay','stay'],['food','Eat','eat'],['nt','Places','nt']];
+const tabbar=document.createElement('div'); tabbar.className='tabbar';
+TABS.forEach(([k,label,ic])=>{
+  const b=document.createElement('button');
+  b.className='tab'+(k==='near'?' on':''); b.dataset.k=k;
+  b.innerHTML=`<svg viewBox="0 0 24 24">${ICON[ic]}</svg>${label}`;
+  b.onclick=()=>go(k);
+  tabbar.appendChild(b);
+});
+document.body.appendChild(tabbar);
+
+/* ---------- state ---------- */
+let filter='near',sub='all',radius=0,mapview=false;
+const SUBS={
+  hotel:[['all','All 100'],['inn','Inns & gastropubs'],['chain','Chains'],['country','Country house'],['cheap','Under £150'],['close','Under 2 mi off']],
+  nt:[['all','All places'],['pk','Pokémon ✦']],
+  food:[['all','Everything'],['waga','Wagamama'],['nandos',"Nando's"],['pe','PizzaExpress'],['fg','Five Guys'],['gbk','GBK']],
+  services:[['all','All stops'],['tesla','⚡ Tesla']],
+  near:[['all','Everything'],['hotel','Hotels'],['services','Services'],['food','Food'],['nt','National Trust']]
+};
+const TITLE={near:['Near me','Tap “Locate me” to see what’s closest'],
+  plan:['The plan','Fri 14 – Sat 15 August · 250 miles'],
+  hotel:['Stay','100 places with 2 rooms free on 14 Aug'],
+  food:['Eat','Chains and services along the route'],
+  nt:['Places','National Trust, with the Pokémon trails'],
+  services:['Services','Fuel, food and chargers']};
+
+function go(k){
+  filter=k; sub='all'; mapview=false;
+  document.body.classList.remove('mapview');
+  [...tabbar.children].forEach(c=>c.classList.toggle('on',c.dataset.k===k));
+  const t=TITLE[k]||TITLE.near;
+  bigtitle.innerHTML=`${t[0]}<small>${t[1]}</small>`;
+  navtitle.textContent=t[0];
+  buildSubs(); render(); window.scrollTo({top:0});
+}
+function buildSubs(){
+  const defs=SUBS[filter];
+  subEl.innerHTML=''; subEl.style.display=defs?'flex':'none';
+  if(!defs)return;
+  defs.forEach(([k,l])=>{
+    const b=document.createElement('button');
+    b.className='pill'+(k===sub?' on':''); b.textContent=l; b.dataset.k=k;
+    b.onclick=()=>{sub=k;[...subEl.children].forEach(c=>c.classList.toggle('on',c.dataset.k===k));render();window.scrollTo({top:0})};
+    subEl.appendChild(b);
+  });
+}
+/* top scroller = sort / view */
+function buildChips(){
+  chipsEl.innerHTML='';
+  const opts=(filter==='plan')?[]:[
+    ['near','Nearest first'],['route','Route order'],['detour','Least detour'],
+    ...(filter==='hotel'?[['price','Cheapest']]:[]),['map','🗺 Map']];
+  opts.forEach(([k,l])=>{
+    const b=document.createElement('button');
+    b.className='pill'+((k==='map'?mapview:(!mapview&&sortBy===k))?' on':''); b.textContent=l; b.dataset.k=k;
+    b.onclick=()=>{
+      if(k==='map'){ if(!HAS_MAP){alert('The map needs a connection. Lists work offline.');return}
+        mapview=!mapview; document.body.classList.toggle('mapview',mapview);
+        if(mapview)setTimeout(()=>map.invalidateSize(),90);
+      } else {sortBy=k;mapview=false;document.body.classList.remove('mapview')}
+      buildChips(); render();
+    };
+    chipsEl.appendChild(b);
+  });
+  chipsEl.style.display=opts.length?'flex':'none';
+}
+let sortBy='near';
+
+/* ---------- location ---------- */
+let watchId=null,locErr=null;
+function setLocLabel(txt,on){loclabel.textContent=txt;locbtn.classList.toggle('on',!!on)}
+locbtn.onclick=()=>{
+  if(watchId!==null){
+    navigator.geolocation.clearWatch(watchId);watchId=null;me=null;
+    setLocLabel('Locate me',false);
+    if(meMarker&&map){map.removeLayer(meMarker);meMarker=null}
+    if(meAcc&&map){map.removeLayer(meAcc);meAcc=null}
+    render();return;
+  }
+  if(!navigator.geolocation){locErr='This browser has no location support.';render();return}
+  setLocLabel('Finding…',false);
+  watchId=navigator.geolocation.watchPosition(
+    pos=>{locErr=null;setMe(pos.coords.latitude,pos.coords.longitude,pos.coords.accuracy);setLocLabel('Live',true)},
+    err=>{watchId=null;setLocLabel('Locate me',false);
+      locErr='Couldn’t get your location — '+err.message+'. If you opened this as a file rather than a web link, iOS blocks GPS. Open the hosted link instead, or long-press the map to drop your position by hand.';
+      render()},
+    {enableHighAccuracy:true,maximumAge:10000,timeout:12000});
+};
+function setMe(lat,lng,acc){
+  me={lat,lng};
+  if(HAS_MAP&&map){
+    if(!meMarker){meMarker=L.marker([lat,lng],{icon:L.divIcon({className:'',iconSize:[18,18],iconAnchor:[9,9],
+      html:'<div class="me" style="width:18px;height:18px"></div>'}),zIndexOffset:1000}).addTo(map);map.setView([lat,lng],10)}
+    else meMarker.setLatLng([lat,lng]);
+    if(acc){if(!meAcc)meAcc=L.circle([lat,lng],{radius:acc,color:'#0a84ff',weight:1,fillOpacity:.08}).addTo(map);
+      else{meAcc.setLatLng([lat,lng]);meAcc.setRadius(acc)}}
+  }
+  render();
+}
+
+/* ---------- cards ---------- */
+function photoBlock(p){
+  const ph=photoOf(p,700);
+  if(ph) return `<div class="photo"><img src="${ph}" alt="" loading="lazy" onerror="this.parentNode.style.display='none'">
+    <div class="grad"></div><div class="cap">${p.n}</div></div>`;
+  const lg=p.lg?BRAND[p.lg]:null;
+  const col=COLOR[p.c];
+  return `<div class="fallback">
+    ${lg?logoImg(lg[1],''):`<div class="fi" style="background:${col}">${p.n.replace(/^The /,'')[0]}</div>`}
+    <div style="min-width:0"><div class="cname">${p.n}</div>
+    <div style="font-size:12.5px;color:var(--lab2);margin-top:2px">${CATNAME[p.c]}${p.st?' · '+(p.st==='inn'?'inn / gastropub':p.st==='country'?'country house':'chain'):''}</div></div>
+  </div>`;
+}
+function card(p){
+  const ph=!!photoOf(p);
+  const t=[];
+  if(p.dist!=null) t.push(`<span class="dist">${fmtD(p.dist)}</span>`);
+  t.push(`<span class="tag">${p.jn}</span>`);
+  t.push(`<span class="tag${p.detour<=1.5?' hi':''}">${p.detour===0?'no detour':'~'+p.detour+' mi off'}</span>`);
+  if(p.tesla===1) t.push('<span class="tag tesla">⚡ Tesla</span>');
+  if(p.tesla===-1) t.push('<span class="tag warn">Tesla unconfirmed</span>');
+  if(p.pk==='trail') t.push('<span class="tag pk">✦ Mega Evolution Trail</span>');
+  if(p.pk==='zone') t.push('<span class="tag pk">✦ Pokémon zone</span>');
+  if(p.pk==='stickers') t.push('<span class="tag pk">✦ Pokémon stickers</span>');
+  if(p.soldout) t.push('<span class="tag warn">SOLD OUT</span>');
+  if(p.check) t.push('<span class="tag warn">verify first</span>');
+  if(p.op) t.push(`<span class="tag">${p.op}</span>`);
+
+  const brands=(()=>{
+    let o=[];
+    if(p.tesla===1)o.push(`<span class="brand">${logoImg('tesla.com')}Supercharger</span>`);
+    (p.br||[]).forEach(k=>{const b=BRAND[k];if(b)o.push(`<span class="brand">${logoImg(b[1])}${b[0]}</span>`)});
+    return o.length?`<div class="brands">${o.join('')}</div>`:'';
+  })();
+
+  return `<div class="card${ph?' hasphoto':''}">
+    ${photoBlock(p)}
+    <div class="body">
+      ${ph?'':''}
+      <div class="crow">
+        ${ph?`<div class="cname" style="flex:1"></div>`:'<div style="flex:1"></div>'}
+        ${p.p?`<div class="price"><b>£${p.p}</b><span>2 ROOMS</span></div>`:''}
+      </div>
+      <div class="tags">${t.join('')}</div>
+      <div class="note">${p.note}</div>
+      ${p.teslaN?`<div class="note" style="color:#ff8078">⚡ ${p.teslaN}</div>`:''}
+      ${brands}
+      <div class="acts">
+        <a href="${mapsUrl(p)}" target="_blank" rel="noopener">Directions</a>
+        ${p.c==='hotel'?`<a href="${photosUrl(p)}" target="_blank" rel="noopener">Photos</a>`:''}
+        <a class="pri" href="${bookUrl(p)}" target="_blank" rel="noopener">${p.c==='hotel'?(p.soldout?'Recheck':'Book'):'Info'}</a>
+      </div>
+    </div></div>`;
+}
+
+/* ---------- NEAR ME ---------- */
+function nearScreen(){
+  let h='';
+  if(!me){
+    h+=`<div class="status idle"><div class="pc">Where are you?</div>
+      <div class="sub" style="color:var(--lab2)">Tap <b style="color:#fff">Locate me</b> at the top and this becomes a live list of everything around you, closest first.</div></div>`;
+    if(locErr) h+=`<div class="info warn">${locErr}</div>`;
+    h+=`<div class="info">Until then, here's the route in order. Switch tabs below for hotels, food and National Trust places.</div>`;
+    const items=[...P].sort((a,b)=>a.routeMi-b.routeMi).slice(0,25);
+    h+='<div class="sechead">First stops on the route</div>';
+    items.forEach(p=>h+=card(p));
+    return h;
+  }
+  const pr=projectOnRoute(me.lat,me.lng);
+  const pct=Math.max(0,Math.min(100,Math.round(pr.km/TOTAL*100)));
+  const left=Math.max(0,Math.round(TOTAL-pr.km));
+  P.forEach(p=>p.dist=haversine(me.lat,me.lng,p.lat,p.lng));
+
+  if(pr.d>25){
+    h+=`<div class="status idle"><div class="pc">Off the planned route</div>
+      <div class="sub" style="color:var(--lab2)">You're about ${Math.round(pr.d)} miles from the M4/M5 line. Distances below are still accurate.</div></div>`;
+  } else {
+    h+=`<div class="status"><div class="pc">${pct}%</div>
+      <div class="sub">${Math.round(pr.km)} miles done · <b>${left} to Woolacombe</b></div>
+      <div class="bar"><i style="width:${pct}%"></i></div></div>`;
+  }
+
+  const nearest=c=>[...P].filter(p=>p.c===c&&!p.soldout).sort((a,b)=>a.dist-b.dist)[0];
+  const ahead=[...P].filter(p=>p.routeMi>pr.km-1&&p.c==='services').sort((a,b)=>a.routeMi-b.routeMi)[0];
+  const charge=[...P].filter(p=>p.tesla===1&&p.routeMi>pr.km-1).sort((a,b)=>a.routeMi-b.routeMi)[0];
+  const q=(k,p,extra)=>p?`<a class="quad" href="${mapsUrl(p)}" target="_blank"><div class="k">${k}</div>
+      <div class="v">${p.n}</div><div class="m">${fmtD(p.dist)} away${extra?' · '+extra:''}</div></a>`
+    :`<div class="quad"><div class="k">${k}</div><div class="v" style="color:var(--lab2)">none ahead</div></div>`;
+  h+=`<div class="quads">
+    ${q('Next services',ahead)}
+    ${q('Next Tesla charge',charge)}
+    ${q('Nearest hotel',nearest('hotel'),nearest('hotel')?'£'+nearest('hotel').p:'')}
+    ${q('Nearest food',nearest('food'))}
+  </div>`;
+
+  let items=[...P].filter(p=>sub==='all'||p.c===sub).sort((a,b)=>a.dist-b.dist);
+  const within=items.filter(p=>p.dist<=15);
+  h+=`<div class="sechead">Closest to you now<small>${within.length?within.length+' places within 15 miles':'Nothing within 15 miles — showing the nearest anyway'}</small></div>`;
+  (within.length?within:items.slice(0,15)).slice(0,40).forEach(p=>h+=card(p));
+  drawMap(items.slice(0,60));
+  return h;
+}
+
+/* ---------- PLAN ---------- */
+function planScreen(){
+  const drive=ITIN.reduce((s,x)=>s+(x.drv||0),0);
+  let h=`<div class="totals">
+    <div class="tot"><b>250</b><span>MILES</span></div>
+    <div class="tot"><b>${Math.floor(drive/60)}h${String(drive%60).padStart(2,'0')}</b><span>DRIVING</span></div>
+    <div class="tot"><b>2</b><span>DAYS</span></div></div>`;
+  h+=`<div class="info">Leaving South Woodford at <b>18:00 Friday</b>. Two easy legs rather than one hard one — 120 miles on Friday evening, Dyrham Park mid-morning Saturday, into Woolacombe around 4pm.</div>`;
+  ITIN.forEach((x,i)=>{
+    if(x.day){h+=`<div class="daybar"><b>${x.day}</b><small>${x.sub}</small></div>`;return}
+    if(x.k==='drive'){h+=`<div class="drivebar"><b>↓ ${x.mi} miles · ${x.drv>=60?Math.floor(x.drv/60)+'h '+(x.drv%60)+'m':x.drv+' min'}</b><div>${x.n}<br>${x.note}</div></div>`;return}
+    const last=!ITIN.slice(i+1).some(y=>!y.day&&y.k!=='drive');
+    h+=`<div class="leg"><div class="rail"><div class="rdot ${x.k||''}"></div>${last?'':'<div class="rrod"></div>'}</div>
+      <div class="lbody"><div class="ltime">${x.t}</div><div class="lname">${x.n}</div>
+      <div class="lnote">${x.note}</div>
+      ${x.ll?`<div class="acts"><a href="${ll2(x.ll[0],x.ll[1])}" target="_blank" rel="noopener">Directions</a></div>`:''}
+      </div></div>`;
+  });
+  h+=`<div class="info warn"><b>Two alternatives if the M5 worries you.</b><br><br>
+    <b>Go late:</b> reach Dyrham at 13:30, trail until 16:30, drive once the M5 clears after 16:00 — Woolacombe about 19:00.<br><br>
+    <b>Go early:</b> leave at 07:30 and you're there by 11:00 with a clear run — but you'd lose Dyrham Park entirely.</div>`;
+  return h;
+}
+
+/* ---------- LIST SCREENS ---------- */
+function listScreen(){
+  let items=P.filter(p=>p.c===filter);
+  if(sub!=='all'){
+    if(filter==='hotel'){
+      if(sub==='cheap')items=items.filter(p=>p.p&&p.p<150);
+      else if(sub==='close')items=items.filter(p=>p.detour<=2);
+      else items=items.filter(p=>p.st===sub);
+    }
+    else if(filter==='nt')items=items.filter(p=>p.pk);
+    else if(filter==='food')items=items.filter(p=>(p.br||[]).includes(sub));
+    else if(filter==='services')items=items.filter(p=>p.tesla===1);
+  }
+  if(me)items.forEach(p=>p.dist=haversine(me.lat,me.lng,p.lat,p.lng));
+  const cmp={near:(a,b)=>me?a.dist-b.dist:a.routeMi-b.routeMi,
+    route:(a,b)=>a.routeMi-b.routeMi,
+    detour:(a,b)=>a.detour-b.detour||a.routeMi-b.routeMi,
+    price:(a,b)=>(a.p==null?1e9:a.p)-(b.p==null?1e9:b.p)}[sortBy]||((a,b)=>a.routeMi-b.routeMi);
+  items=[...items].sort(cmp);
+  drawMap(items);
+
+  let h='';
+  if(filter==='nt') h+=`<div class="info pk"><b>Pokémon × National Trust · 18 Jul – 6 Sep 2026.</b><br>
+    <b>Dyrham Park (M4 J18)</b> is one of only 16 places nationally with the <b>Mega Evolution TCG Trail</b>.
+    <b>Lacock, Tyntesfield, Cliveden and Killerton</b> run full <b>Pokémon zones</b>.
+    Sticker booklets at every Summer of Play site, and PokéStops, Gyms and in-game Routes at 140 NT places.</div>`;
+  if(filter==='hotel') h+=`<div class="info"><b>${P.filter(x=>x.c==='hotel'&&!x.soldout).length} hotels, every one with 2 rooms bookable for Fri 14 Aug</b> when I checked. 85–91% of local stock had already gone. Nothing left out on price except a few places over £600.<br><br>
+    <b>On photos:</b> Booking.com serves its images with expiring tokens, so I can't embed them. The <b>Photos</b> button on each card opens image search for that hotel instead.</div>`;
+  if(filter==='food') h+=`<div class="info"><b>GBK has shrunk to 12 UK branches</b> and none are on the route west of Reading — Honest Burgers bought and converted a dozen sites. Bracknell is your nearest, and it's 8 miles off M4 J10. The <b>Swindon Designer Outlet</b> (Wagamama + Five Guys + PizzaExpress, one car park, 2 miles off J16) is the far better stop.</div>`;
+  if(!items.length)h+='<div class="empty">Nothing matches that filter.</div>';
+  items.forEach(p=>h+=card(p));
+  return h;
+}
+
+/* ---------- render ---------- */
+function render(){
+  buildChips();
+  let h='';
+  if(filter==='near')h=nearScreen();
+  else if(filter==='plan')h=planScreen();
+  else h=listScreen();
+  listEl.innerHTML=h;
+  /* photo cards: name lives in the caption, so blank the duplicate */
+  [...listEl.querySelectorAll('.card.hasphoto .crow .cname')].forEach(e=>e.remove());
+}
+function focusOn(id){const p=P[id];window.open(mapsUrl(p),'_blank')}
+
+go('near');
+setTimeout(()=>{if(HAS_MAP&&map)map.invalidateSize()},250);
+</script>
+</body>
+</html>
