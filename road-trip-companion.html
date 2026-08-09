@@ -694,16 +694,16 @@ const ITIN=[
  note:"M25 J23 down to J15 is the second pinch point; it should ease past J16 (M40). Once you're on the M4 heading west it opens up."},
 {t:"20:15",n:"Reading Services (M4 J11–12)",k:"stop",mi:72,drv:0,ll:[51.4360,-1.0430],
  note:"⭐ <b>The one stop that matters on Friday.</b> Legs, loos, coffee, M&S Simply Food if you skipped dinner. <b>12 Tesla Superchargers</b> — charge here, it's the best-equipped stop on the M4. Allow 20 minutes."},
-{t:"20:35–21:20",n:"M4 J12 → J16 Swindon",k:"drive",mi:38,drv:45,
- note:"Clear running by now. Membury (J14–15) has 8 Tesla stalls if you'd rather split the charge."},
-{t:"21:20",n:"Check in — Swindon or Chippenham",k:"sleep",mi:110,drv:0,ll:[51.5570,-1.8630],
- note:"⭐ <b>Premier Inn Swindon West (M4 J16) — £144</b>, 0.8 mi off the junction, 24-hour reception, free parking. 25 min from Dyrham Park in the morning.<br><br><b>Cheaper:</b> Marsh Farm Hotel £111. <b>Closer to Dyrham (+15 min tonight, −15 min tomorrow):</b> The Jolly Huntsman, Kington St Michael £200, or Premier Inn Chippenham £220 — both at J17.<br><br><b>Still hungry?</b> Nando's Swindon at Regent Circus serves until 22:30 Thu–Sat. It's the only realistic sit-down option at this hour."},
+{t:"20:45–20:55",n:"M4 J11 — five minutes to the hotel",k:"drive",mi:3,drv:8,
+ note:"The 30-minute break at Reading Services, then straight off at the next junction. Feeling fresh instead? Membury is 25 min on (Days Inn £120, same car park as the services) and Liddington 35 min (Village Inn £141) — use <b>Tonight's stop → Change</b> if you push on."},
+{t:"~21:00",n:"Check in — Reading",k:"sleep",mi:72,drv:0,ll:[51.4180,-0.9840],
+ note:"⭐ <b>Premier Inn Reading Gateway (M4 J11) — £132</b>, straight off the roundabout, Beefeater attached, free parking.<br><br><b>Cheaper:</b> Easyhotel £94 or Sure Hotel £97 in town. <b>By J12 for the quickest getaway:</b> Best Western Calcot £135.<br><br>Kids fed at the services, check-in by nine, done."},
 
-{day:"SATURDAY 15 AUGUST",sub:"Dyrham Park &amp; the run to Devon &middot; ~130 miles &middot; ~3h driving"},
-{t:"08:00–09:15",n:"Breakfast, pack, no rush",k:"stop",mi:110,drv:0,
- note:"There is <b>no advantage to leaving early</b> — Dyrham Park's car park doesn't open until 10:00, and Woolacombe check-in is usually 15:00–16:00. Take the morning slowly."},
-{t:"09:15–09:45",n:"M4 J16 → J18 → A46 south",k:"drive",mi:22,drv:30,
- note:"Two miles south of J18 (Tormarton interchange) on the A46. Sat nav SN14 8HY, and enter the car park from the A46."},
+{day:"SATURDAY 15 AUGUST",sub:"Dyrham Park &amp; the run to Devon &middot; ~170 miles &middot; ~4h driving"},
+{t:"07:45–08:45",n:"Breakfast, pack, away by 8:45",k:"stop",mi:72,drv:0,
+ note:"Reading is an hour further from Dyrham than Swindon was, so the lazy start tightens a little: <b>leave by 08:45</b> to make the 10:00 car-park opening. Woolacombe check-in is 15:00–16:00, so there's still no prize for earlier."},
+{t:"08:45–09:55",n:"M4 J12 → J18 → A46 south",k:"drive",mi:60,drv:70,
+ note:"Clear Saturday-morning running on the M4. Two miles south of J18 (Tormarton) on the A46. Sat nav SN14 8HY, enter the car park from the A46."},
 {t:"10:00–12:15",n:"DYRHAM PARK — Pokémon TCG Mega Evolution Trail",k:"pk",mi:132,drv:0,ll:[51.4805,-2.3629],
  note:"⭐⭐⭐ <b>The reason for the whole detour.</b> One of only 16 National Trust places running the Mega Evolution Trail. Drop-in, <b>no booking needed</b>, running 8 Aug – 2 Sep, 10:00–17:00.<br><br><b>Parkland &amp; car park open 10:00</b> · tea-room 10:30 · house 11:30 · last entry 16:00.<br><br><b>Do this:</b> trail around the 270-acre parkland (allow 1.5h), then the play area and café at Old Lodge. Skip the house unless it's raining — the trail is the point.<br><br><b>Money:</b> family ticket £57.50 (£63.30 with Gift Aid) — <b>NT membership pays for itself in this one visit</b>. Parking £4/day, free for members. Car park uses the <b>JustPark app, code 80574 — download it before you arrive, phone signal on site is patchy</b>. That patchy signal also matters if anyone's playing Pokémon GO.<br><br>Assistance dogs only, because of the deer herd."},
 {t:"12:15–13:50",n:"A46 → M4 J18 → J20 Almondsbury → M5 south",k:"drive",mi:62,drv:95,
@@ -987,10 +987,10 @@ const SUBS={
 };
 const TITLE={near:['Near me','Tap “Locate me” to see what’s closest'],
   plan:['The plan','Fri 14 – Sat 15 August · 250 miles'],
-  hotel:['Stay','100 places with 2 rooms free on 14 Aug'],
-  food:['Eat','Chains and services along the route'],
-  nt:['Places','National Trust, with the Pokémon trails'],
-  services:['Services','Fuel, food and chargers']};
+  hotel:['Stay','When do you want to stop?'],
+  food:['Eat','When do you want to stop?'],
+  nt:['Places','Pick a time window, or Pokémon only'],
+  services:['Services','Pick when you want to pull in']};
 
 function go(k){
   filter=k; sub='all'; mapview=false;
@@ -1013,26 +1013,30 @@ function buildSubs(){
   });
 }
 /* top scroller = sort / view */
+/* One question instead of sort options: WHEN do you want to stop?
+   "30m" means the 20–30 minute window ahead of wherever you are. */
 function buildChips(){
   chipsEl.innerHTML='';
-  const opts=(filter==='plan')?[]:[
-    ['near','Nearest first'],['route','Route order'],['detour','Least detour'],
-    ...(filter==='hotel'?[['price','Cheapest']]:[]),['map','🗺 Map']];
+  let opts=[];
+  if(filter==='plan') opts=[];
+  else if(filter==='near') opts=[['map','🗺 Map']];
+  else opts=[['now','Now'],[10,'10m'],[20,'20m'],[30,'30m'],[40,'40m'],[50,'50m'],[60,'60m'],['map','🗺 Map']];
   opts.forEach(([k,l])=>{
     const b=document.createElement('button');
-    b.className='pill'+((k==='map'?mapview:(!mapview&&sortBy===k))?' on':''); b.textContent=l; b.dataset.k=k;
+    const on = k==='map' ? mapview : (!mapview && !showAll && when===k);
+    b.className='pill'+(on?' on':''); b.textContent=l; b.dataset.k=String(k);
     b.onclick=()=>{
       if(k==='map'){ if(!HAS_MAP){alert('The map needs a connection. Lists work offline.');return}
         mapview=!mapview; document.body.classList.toggle('mapview',mapview);
         if(mapview)setTimeout(()=>map.invalidateSize(),90);
-      } else {sortBy=k;mapview=false;document.body.classList.remove('mapview')}
+      } else {when=k;showAll=false;mapview=false;document.body.classList.remove('mapview')}
       buildChips(); render();
     };
     chipsEl.appendChild(b);
   });
   chipsEl.style.display=opts.length?'flex':'none';
 }
-let sortBy='near';
+let sortBy='near', when='now', showAll=false;
 
 /* ============================================================
    MISSION CONTROL
@@ -1045,8 +1049,8 @@ let sortBy='near';
    unavailable (private browsing, restricted settings) the app still works,
    it just forgets between sessions.
    ============================================================ */
-const SKEY='woolacombe-trip-v1';
-const DEFAULT_STATE={tonightMi:106, tonightName:"Swindon J16", visited:{}, notes:{}};
+const SKEY='woolacombe-trip-v2';   /* v2: default overnight moved to Reading */
+const DEFAULT_STATE={tonightMi:69, tonightName:"Reading — just past the services", visited:{}, notes:{}};
 let STATE=Object.assign({},DEFAULT_STATE);
 try{
   const raw=localStorage.getItem(SKEY);
@@ -1395,12 +1399,8 @@ function card(p){
   if(p.veg>=3) t.push('<span class="tag near">🌱 excellent veggie</span>');
   else if(p.veg===2) t.push('<span class="tag near">🌱 good veggie</span>');
   else if(p.veg===1) t.push('<span class="tag warn">🌱 limited veggie</span>');
-  if(p.ahead!=null){
-    t.push(p.ahead>2
-      ? `<span class="tag hi">${Math.round(p.ahead)} mi ahead</span>`
-      : p.ahead<-2 ? `<span class="tag warn">${Math.round(-p.ahead)} mi behind you</span>`
-      : `<span class="tag hi">you're here</span>`);
-  }
+  if(p.eta!=null) t.push(`<span class="tag hi">⏱ ${me?'':'from home '}~${fmtT(p.eta)}</span>`);
+  else if(p.ahead!=null&&p.ahead<-2) t.push(`<span class="tag warn">${Math.round(-p.ahead)} mi behind you</span>`);
   t.push(`<span class="tag">${p.jn}</span>`);
   t.push(`<span class="tag${p.detour<=1.5?' hi':''}">${p.detour===0?'no detour':'~'+p.detour+' mi off'}</span>`);
   if(p.tesla===1) t.push('<span class="tag tesla">⚡ Tesla</span>');
@@ -1503,8 +1503,6 @@ function nearScreen(){
       ${q('Nearest Tesla charge',charge)}
       ${q('Nearest hotel',hotel,hotel?'£'+hotel.p:'')}
       ${q('Nearest Wagamama / GBK',waga)}
-      ${q('Nearest good veggie pub',pub)}
-      ${q('Nearest anything',near(p=>true))}
     </div>`;
   } else {
     const nm={hotel:'hotels',services:'services',food:'food',nt:'National Trust places'}[sub]||sub;
@@ -1526,8 +1524,12 @@ function nearScreen(){
     .filter(p=>sub==='all'||p.c===sub)
     .filter(p=>!(sub==='all'&&p.c==='food'&&hotelNames.has(p.n)))
     .sort((a,b)=>a.dist-b.dist);
-  /* how far along the route each place sits relative to you */
-  items.forEach(p=>p.ahead=p.routeMi-pr.km);
+  /* position + drive-time-ahead for every place (cards show the ⏱ tag from eta) */
+  P.forEach(p=>{
+    p.ahead=p.routeMi-pr.km;
+    p.eta = p.routeMi>=pr.km-1
+      ? routeEta(pr.km,Math.max(pr.km,p.routeMi))+Math.round(p.detour/30*60) : null;
+  });
 
   /* Progressive radius: widen until there's a useful number of results.
      A fixed 15-mile cut left you with 2 places at the start of the journey. */
@@ -1544,7 +1546,7 @@ function nearScreen(){
     ? `${within.length} within ${ring} miles`
     : `Only ${items.length} in the app — showing all of them`;
   h+=`<div class="sechead">Closest to you<small>${label} · ${items.filter(p=>p.ahead>0).length} still ahead on the route</small></div>`;
-  within.slice(0,40).forEach(p=>h+=card(p));
+  within.slice(0,12).forEach(p=>h+=card(p));
   drawMap(items.slice(0,60));
   return h;
 }
@@ -1768,9 +1770,12 @@ async function runApiTest(){
 
 /* ---------- LIST SCREENS ---------- */
 function listScreen(){
-  let items=P.filter(p=>p.c===filter);
-  /* Food and hotels: never show anything more than MAX_DETOUR off the route */
-  if(filter==='food'||filter==='hotel') items=items.filter(p=>p.detour<=MAX_DETOUR);
+  const nowMi = me ? projectOnRoute(me.lat,me.lng).km : 0;
+
+  /* pool for this tab */
+  let base = P.filter(p=>p.c===filter && !p.soldout);
+  if(filter==='food'||filter==='hotel') base=base.filter(p=>p.detour<=MAX_DETOUR);
+  let items=base;
   if(sub!=='all'){
     if(filter==='food'&&sub==='pub') items=items.filter(p=>p.pub);
     else if(filter==='food'&&sub==='veg') items=items.filter(p=>p.veg>=2);
@@ -1783,41 +1788,47 @@ function listScreen(){
     else if(filter==='food')items=items.filter(p=>(p.br||[]).includes(sub));
     else if(filter==='services')items=items.filter(p=>p.tesla===1);
   }
-  if(me)items.forEach(p=>p.dist=haversine(me.lat,me.lng,p.lat,p.lng));
-  const cmp={near:(a,b)=>me?a.dist-b.dist:a.routeMi-b.routeMi,
-    route:(a,b)=>a.routeMi-b.routeMi,
-    detour:(a,b)=>a.detour-b.detour||a.routeMi-b.routeMi,
-    price:(a,b)=>(a.p==null?1e9:a.p)-(b.p==null?1e9:b.p)}[sortBy]||((a,b)=>a.routeMi-b.routeMi);
-  items=[...items].sort(cmp);
-  drawMap(items);
+
+  /* minutes until you could be parked at each place, driving on from here */
+  items.forEach(p=>{
+    if(me) p.dist=haversine(me.lat,me.lng,p.lat,p.lng);
+    p.eta = p.routeMi >= nowMi-1
+      ? routeEta(nowMi, Math.max(nowMi,p.routeMi)) + Math.round(p.detour/30*60)
+      : null;                                   /* behind you */
+  });
 
   let h='';
-  if(filter==='nt') h+=`<div class="info pk"><b>Pokémon × National Trust · 18 Jul – 6 Sep 2026.</b><br>
-    <b>Dyrham Park (M4 J18)</b> is one of only 16 places nationally with the <b>Mega Evolution TCG Trail</b>.
-    <b>Lacock, Tyntesfield, Cliveden and Killerton</b> run full <b>Pokémon zones</b>.
-    Sticker booklets at every Summer of Play site, and PokéStops, Gyms and in-game Routes at 140 NT places.</div>`;
-  if(filter==='hotel'&&sub==='all') h+=nearbyStay();
-  if(filter==='hotel') h+=`<div class="sechead" style="margin-top:20px">Everywhere on the route<small>${P.filter(x=>x.c==='hotel'&&!x.soldout).length} hotels</small></div>
-    <div class="info"><b>${P.filter(x=>x.c==='hotel'&&!x.soldout).length} hotels, every one with 2 rooms bookable for Fri 14 Aug</b> when I checked. 85–91% of local stock had already gone. Nothing left out on price except a few places over £600.<br><br>
-    <b>On photos:</b> Booking.com serves its images with expiring tokens, so I can't embed them. The <b>Photos</b> button on each card opens image search for that hotel instead.</div>`;
-  if(filter==='food'&&sub==='all'){
-    const easy=P.filter(p=>p.c==='food'&&p.detour<=5&&((p.br||[]).some(b=>['waga','nandos','pe','fg'].includes(b))||p.veg>=2))
-                .sort((a,b)=>a.detour-b.detour).slice(0,6);
-    if(easy.length){
-      h+=`<div class="sechead">Easiest good stops<small>swipe · all within 5 miles of the road</small></div><div class="hrail">`;
-      easy.forEach(p=>h+=card(p)); h+=`</div>`;
+  if(!me) h+=`<div class="info">Times measured from <b>home</b> until you tap Locate me.</div>`;
+
+  if(showAll){
+    h+=`<div class="sechead">The full list<small>${items.length} in route order</small></div>`;
+    [...items].sort((a,b)=>a.routeMi-b.routeMi).forEach(p=>h+=card(p));
+  }
+  else if(when==='now'){
+    const list=[...items].sort((a,b)=> me ? a.dist-b.dist : (a.eta==null?1e9:a.eta)-(b.eta==null?1e9:b.eta)).slice(0,8);
+    h+=`<div class="sechead">Nearest now<small>${list.length? 'closest first':'nothing in this category'}</small></div>`;
+    list.forEach(p=>h+=card(p));
+  }
+  else {
+    const lo=when-10, hi=when;
+    const inB=items.filter(p=>p.eta!=null&&p.eta>lo&&p.eta<=hi).sort((a,b)=>a.eta-b.eta);
+    h+=`<div class="sechead">Stop in ~${when} minutes<small>${
+      inB.length? inB.length+' option'+(inB.length===1?'':'s')+' in the '+lo+'–'+hi+' min window'
+                : 'nothing lands in '+lo+'–'+hi+' min'}</small></div>`;
+    if(inB.length) inB.slice(0,8).forEach(p=>h+=card(p));
+    else {
+      const alt=items.filter(p=>p.eta!=null).sort((a,b)=>Math.abs(a.eta-when)-Math.abs(b.eta-when)).slice(0,4);
+      if(alt.length){ h+=`<div class="info">Closest to that window instead:</div>`; alt.forEach(p=>h+=card(p)); }
+      else h+=`<div class="empty">Everything here is behind you now.</div>`;
     }
   }
-  if(filter==='nt'&&sub==='all'){
-    const pk=P.filter(p=>p.c==='nt'&&p.pk).sort((a,b)=>a.routeMi-b.routeMi).slice(0,6);
-    if(pk.length){
-      h+=`<div class="sechead">The Pokémon ones<small>swipe · in route order</small></div><div class="hrail">`;
-      pk.forEach(p=>h+=card(p)); h+=`</div>`;
-    }
-  }
-  if(filter==='food') h+=`<div class="info"><b>GBK has shrunk to 12 UK branches</b> and none are on the route west of Reading — Honest Burgers bought and converted a dozen sites. Bracknell is your nearest, and it's 8 miles off M4 J10. The <b>Swindon Designer Outlet</b> (Wagamama + Five Guys + PizzaExpress, one car park, 2 miles off J16) is the far better stop.</div>`;
-  if(!items.length)h+='<div class="empty">Nothing matches that filter.</div>';
-  items.forEach(p=>h+=card(p));
+
+  h+=`<div class="acts" style="margin:6px 0 4px">
+    <a href="#" onclick="showAll=!showAll;buildChips();render();return false">${showAll?'← Back to the time picker':'Browse all '+items.length}</a>
+    ${filter==='hotel'?`<a class="pri" href="#" onclick="findMoreHotels();return false">🔎 ${GKEY_ON?'Search Google nearby':'Search Google (needs key)'}</a>`:''}
+  </div>${filter==='hotel'?'<div id="moreout"></div>':''}`;
+  if(filter==='hotel') h+=`<div class="info" style="font-size:12px">Every hotel here had 2 rooms free for Fri 14 Aug when checked. Prices are totals for both rooms and will change.</div>`;
+  drawMap(items);
   return h;
 }
 
