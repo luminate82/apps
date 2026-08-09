@@ -4,24 +4,25 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=5, viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="theme-color" content="#0f172a">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="theme-color" content="#dff0f7">
 <title>Woolacombe Road Trip Companion</title>
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin=""/>
 <style>
   :root{
-    /* iOS dark system palette */
-    --bg:#000; --card:#1c1c1e; --card2:#2c2c2e; --sep:#38383a;
-    --lab:#fff; --lab2:#98989f; --lab3:#68686e;
-    --blue:#0a84ff; --green:#30d158; --orange:#ff9f0a; --red:#ff453a;
-    --yellow:#ffd60a; --purple:#bf5af0; --teal:#40c8e0; --pink:#ff375f;
-    --hotel:#bf5af0; --services:#40c8e0; --food:#ff9f0a; --nt:#30d158;
+    /* summer light — warm sand, sea blue */
+    --bg:#f7f4ee; --card:#ffffff; --card2:#f0ece3; --sep:#e5e0d5;
+    --lab:#20242c; --lab2:#6f6a5e; --lab3:#a39d8f;
+    --blue:#0077b6; --green:#178a45; --orange:#e07b1f; --red:#c0392b;
+    --yellow:#b45309; --purple:#7c3aed; --teal:#0891b2; --pink:#d6336c;
+    --hotel:#7c3aed; --services:#0891b2; --food:#e07b1f; --nt:#178a45;
     --st:env(safe-area-inset-top,0px); --sb:env(safe-area-inset-bottom,0px);
   }
   *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;margin:0;padding:0}
   html{background:var(--bg)}
   body{
-    background:var(--bg); color:var(--lab);
+    background:linear-gradient(180deg,#dff0f7 0%,#f2efe7 130px,var(--bg) 260px);
+    color:var(--lab);
     font:17px/1.4 -apple-system,BlinkMacSystemFont,"SF Pro Text","Segoe UI",Roboto,sans-serif;
     -webkit-font-smoothing:antialiased; overscroll-behavior-y:none;
     padding-bottom:calc(56px + var(--sb));
@@ -30,64 +31,64 @@
   button{font-family:inherit;border:0;background:none;color:inherit}
   img{display:block}
 
-  /* ---------- nav bar ---------- */
   .nav{position:sticky;top:0;z-index:90;padding:calc(var(--st) + 6px) 16px 8px;
-    background:rgba(0,0,0,.8);-webkit-backdrop-filter:saturate(180%) blur(20px);
+    background:rgba(247,244,238,.82);-webkit-backdrop-filter:saturate(180%) blur(20px);
     backdrop-filter:saturate(180%) blur(20px);border-bottom:.5px solid var(--sep)}
   .navrow{display:flex;align-items:center;gap:10px}
-  .navtitle{font-size:15px;font-weight:600;letter-spacing:-.2px;flex:1;min-width:0;
+  .navtitle{font-size:15px;font-weight:700;letter-spacing:-.2px;flex:1;min-width:0;
     white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-  .big{font-size:32px;font-weight:800;letter-spacing:-.8px;padding:2px 16px 10px}
-  .big small{display:block;font-size:14px;font-weight:400;color:var(--lab2);letter-spacing:-.1px;margin-top:2px}
+  .big{font-size:32px;font-weight:800;letter-spacing:-.8px;padding:6px 16px 10px}
+  .big small{display:block;font-size:14px;font-weight:500;color:var(--lab2);letter-spacing:-.1px;margin-top:2px}
 
-  .locpill{flex:none;display:flex;align-items:center;gap:6px;background:var(--card2);
-    border-radius:999px;padding:7px 13px;font-size:14px;font-weight:600}
-  .locpill.on{background:var(--blue)}
+  .locpill{flex:none;display:flex;align-items:center;gap:6px;background:#fff;
+    border:1px solid var(--sep);border-radius:999px;padding:7px 13px;font-size:14px;font-weight:700;
+    box-shadow:0 1px 2px rgba(60,50,30,.06)}
+  .locpill.on{background:var(--blue);border-color:var(--blue);color:#fff}
   .locpill .d{width:8px;height:8px;border-radius:50%;background:var(--lab3)}
   .locpill.on .d{background:#fff;animation:pl 2s infinite}
   @keyframes pl{0%{opacity:1}50%{opacity:.35}100%{opacity:1}}
 
-  /* ---------- segmented / scroll chips ---------- */
-  .scroller{display:flex;gap:8px;overflow-x:auto;padding:10px 16px 2px;
+  .scroller{display:flex;gap:8px;overflow-x:auto;padding:10px 16px 4px;
     scrollbar-width:none;-webkit-overflow-scrolling:touch}
   .scroller::-webkit-scrollbar{display:none}
-  .pill{flex:none;background:var(--card2);color:var(--lab2);border-radius:999px;
-    padding:8px 14px;font-size:14px;font-weight:600;white-space:nowrap;transition:transform .1s}
+  .pill{flex:none;background:#fff;border:1px solid var(--sep);color:var(--lab2);border-radius:999px;
+    padding:8px 14px;font-size:14px;font-weight:700;white-space:nowrap;transition:transform .1s;
+    box-shadow:0 1px 2px rgba(60,50,30,.05)}
   .pill:active{transform:scale(.94)}
-  .pill.on{background:var(--lab);color:#000}
+  .pill.on{background:#20242c;border-color:#20242c;color:#fff}
 
-  /* ---------- content ---------- */
   .wrap{padding:0 16px}
   .sechead{font-size:22px;font-weight:800;letter-spacing:-.5px;margin:24px 0 10px}
-  .sechead small{display:block;font-size:13px;font-weight:400;color:var(--lab2);letter-spacing:0;margin-top:2px}
-  .grouphead{font-size:12px;font-weight:700;letter-spacing:.6px;text-transform:uppercase;
+  .sechead small{display:block;font-size:13px;font-weight:500;color:var(--lab2);letter-spacing:0;margin-top:2px}
+  .grouphead{font-size:12px;font-weight:800;letter-spacing:.6px;text-transform:uppercase;
     color:var(--lab2);margin:22px 0 8px}
 
-  /* ---------- status card ---------- */
-  .status{background:linear-gradient(140deg,#0a84ff,#5e5ce6);border-radius:20px;padding:18px;margin:6px 0 4px}
+  .status{background:linear-gradient(135deg,#00a6c0,#0077b6);color:#fff;
+    border-radius:20px;padding:18px;margin:6px 0 4px;box-shadow:0 6px 18px rgba(0,119,182,.25)}
   .status .pc{font-size:40px;font-weight:800;letter-spacing:-1.5px;line-height:1}
-  .status .sub{font-size:14px;opacity:.92;margin-top:4px}
-  .bar{height:6px;background:rgba(255,255,255,.28);border-radius:99px;margin-top:14px;overflow:hidden}
+  .status .sub{font-size:14px;opacity:.95;margin-top:4px}
+  .bar{height:6px;background:rgba(255,255,255,.3);border-radius:99px;margin-top:14px;overflow:hidden}
   .bar i{display:block;height:100%;background:#fff;border-radius:99px}
-  .status.idle{background:var(--card)}
+  .status.idle{background:#fff;color:var(--lab);box-shadow:0 1px 4px rgba(60,50,30,.08)}
   .status.idle .pc{font-size:19px;letter-spacing:-.4px}
 
   .quads{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:12px}
-  .quad{background:var(--card);border-radius:16px;padding:13px 14px}
-  .quad .k{font-size:11px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:var(--lab2)}
+  .quad{background:var(--card);border-radius:16px;padding:13px 14px;
+    box-shadow:0 1px 4px rgba(60,50,30,.07)}
+  .quad .k{font-size:11px;font-weight:800;letter-spacing:.5px;text-transform:uppercase;color:var(--lab2)}
   .quad .v{font-size:15px;font-weight:700;letter-spacing:-.3px;margin-top:5px;line-height:1.25}
   .quad .m{font-size:12px;color:var(--lab2);margin-top:3px}
 
-  /* ---------- place card ---------- */
-  .card{background:var(--card);border-radius:18px;overflow:hidden;margin-bottom:12px}
+  .card{background:var(--card);border-radius:18px;overflow:hidden;margin-bottom:12px;
+    box-shadow:0 1px 5px rgba(60,50,30,.08)}
   .photo{position:relative;height:150px;background:var(--card2);overflow:hidden}
   .photo img{width:100%;height:100%;object-fit:cover}
-  .photo .grad{position:absolute;inset:0;background:linear-gradient(180deg,rgba(0,0,0,0) 40%,rgba(0,0,0,.75))}
-  .photo .cap{position:absolute;left:14px;right:14px;bottom:11px;font-size:19px;font-weight:800;letter-spacing:-.4px;text-shadow:0 1px 8px rgba(0,0,0,.6)}
+  .photo .grad{position:absolute;inset:0;background:linear-gradient(180deg,rgba(0,0,0,0) 40%,rgba(0,0,0,.65))}
+  .photo .cap{position:absolute;left:14px;right:14px;bottom:11px;color:#fff;font-size:19px;font-weight:800;letter-spacing:-.4px;text-shadow:0 1px 8px rgba(0,0,0,.55)}
   .fallback{height:92px;display:flex;align-items:center;gap:12px;padding:0 16px}
-  .fallback img{width:40px;height:40px;border-radius:10px;background:#fff;object-fit:contain;flex:none}
+  .fallback img{width:40px;height:40px;border-radius:10px;background:#fff;border:1px solid var(--sep);object-fit:contain;flex:none}
   .fallback .fi{width:40px;height:40px;border-radius:10px;flex:none;display:flex;align-items:center;
-    justify-content:center;font-size:17px;font-weight:800;color:#000}
+    justify-content:center;font-size:17px;font-weight:800;color:#fff}
   .body{padding:13px 16px 15px}
   .card.hasphoto .body{padding-top:12px}
   .cname{font-size:17px;font-weight:700;letter-spacing:-.4px;line-height:1.25}
@@ -99,99 +100,105 @@
   .dist{display:inline-flex;align-items:center;gap:4px;background:var(--blue);color:#fff;
     border-radius:99px;padding:3px 9px;font-size:12px;font-weight:800;letter-spacing:-.1px}
   .tags{display:flex;flex-wrap:wrap;gap:6px;margin-top:9px}
-  .tag{background:var(--card2);color:var(--lab2);border-radius:7px;padding:3px 8px;font-size:12px;font-weight:600}
-  .tag.hi{background:rgba(10,132,255,.22);color:#6cb6ff}
-  .tag.pk{background:rgba(255,214,10,.18);color:var(--yellow)}
-  .tag.tesla{background:rgba(255,69,58,.18);color:#ff8078}
-  .tag.warn{background:rgba(255,159,10,.18);color:var(--orange)}
-  .note{font-size:14px;color:#d1d1d6;margin-top:10px;line-height:1.45}
+  .tag{background:var(--card2);color:var(--lab2);border-radius:7px;padding:3px 8px;font-size:12px;font-weight:700}
+  .tag.hi{background:rgba(0,119,182,.1);color:var(--blue)}
+  .tag.pk{background:rgba(250,204,21,.22);color:#8a6100}
+  .tag.tesla{background:rgba(192,57,43,.1);color:var(--red)}
+  .tag.warn{background:rgba(224,123,31,.12);color:#9a5b00}
+  .tag.near{background:rgba(23,138,69,.1);color:var(--green)}
+  .note{font-size:14px;color:#4c4a43;margin-top:10px;line-height:1.45}
   .brands{display:flex;flex-wrap:wrap;gap:6px;margin-top:11px}
   .brand{display:flex;align-items:center;gap:5px;background:var(--card2);border-radius:8px;
-    padding:4px 8px 4px 5px;font-size:12px;font-weight:600;color:#d1d1d6}
+    padding:4px 8px 4px 5px;font-size:12px;font-weight:700;color:#4c4a43}
   .brand img{width:16px;height:16px;border-radius:4px;background:#fff;object-fit:contain}
+  .biglogo{width:26px;height:26px;border-radius:6px;background:#fff;border:1px solid var(--sep);object-fit:contain;flex:none;margin-top:1px}
   .acts{display:flex;gap:8px;margin-top:13px}
   .acts a{flex:1;text-align:center;background:var(--card2);border-radius:11px;
-    padding:11px 6px;font-size:14px;font-weight:600;transition:transform .1s}
+    padding:11px 6px;font-size:14px;font-weight:700;transition:transform .1s}
   .acts a:active{transform:scale(.96)}
   .acts a.pri{background:var(--blue);color:#fff}
+  .acts a.done{background:rgba(23,138,69,.14);color:var(--green)}
+  .card.beenthere{opacity:.6}
+  .mynote{background:rgba(250,204,21,.16);border-left:3px solid #eab308;
+    border-radius:8px;padding:9px 11px;margin-top:10px;font-size:13.5px;color:#6b5310;line-height:1.45}
 
-  /* ---------- itinerary ---------- */
-  .daybar{background:var(--card);border-radius:16px;padding:14px 16px;margin:20px 0 12px}
+  /* horizontal card rail — shortlists read as a swipeable carousel, not a list */
+  .hrail{display:flex;gap:12px;overflow-x:auto;margin:0 -16px;padding:4px 16px 14px;
+    scroll-snap-type:x mandatory;scrollbar-width:none;-webkit-overflow-scrolling:touch}
+  .hrail::-webkit-scrollbar{display:none}
+  .hrail .card{flex:0 0 80%;scroll-snap-align:start;margin-bottom:0}
+
+  .daybar{background:var(--card);border-radius:16px;padding:14px 16px;margin:20px 0 12px;
+    box-shadow:0 1px 4px rgba(60,50,30,.07)}
   .daybar b{font-size:19px;font-weight:800;letter-spacing:-.5px}
   .daybar small{display:block;font-size:13px;color:var(--lab2);margin-top:3px}
   .leg{display:flex;gap:13px}
-  .rail{flex:none;width:14px;display:flex;flex-direction:column;align-items:center;padding-top:5px}
+  .leg .rail{flex:none;width:14px;display:flex;flex-direction:column;align-items:center;padding-top:5px}
   .rdot{width:12px;height:12px;border-radius:50%;background:var(--blue);flex:none}
   .rdot.stop{background:var(--orange)}.rdot.sleep{background:var(--purple)}
-  .rdot.pk{background:var(--yellow);width:15px;height:15px}.rdot.end{background:var(--pink)}
+  .rdot.pk{background:#eab308;width:15px;height:15px}.rdot.end{background:var(--pink)}
   .rrod{flex:1;width:2px;background:var(--sep);margin:4px 0}
   .lbody{flex:1;min-width:0;padding-bottom:18px}
   .ltime{font-size:13px;font-weight:800;color:var(--blue);letter-spacing:-.1px}
   .lname{font-size:17px;font-weight:700;letter-spacing:-.4px;margin-top:2px}
-  .lnote{font-size:14px;color:#d1d1d6;margin-top:6px;line-height:1.45}
-  .drivebar{margin:-10px 0 12px 27px;padding:10px 13px;background:var(--card);border-radius:12px}
+  .lnote{font-size:14px;color:#4c4a43;margin-top:6px;line-height:1.45}
+  .drivebar{margin:-10px 0 12px 27px;padding:10px 13px;background:var(--card2);border-radius:12px}
   .drivebar b{font-size:13px;color:var(--lab)}
   .drivebar div{font-size:13px;color:var(--lab2);margin-top:4px;line-height:1.4}
   .totals{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin:14px 0 4px}
-  .tot{background:var(--card);border-radius:16px;padding:14px 8px;text-align:center}
+  .tot{background:var(--card);border-radius:16px;padding:14px 8px;text-align:center;
+    box-shadow:0 1px 4px rgba(60,50,30,.07)}
   .tot b{display:block;font-size:24px;font-weight:800;letter-spacing:-.8px;color:var(--blue)}
-  .tot span{font-size:11px;font-weight:700;letter-spacing:.4px;color:var(--lab2)}
+  .tot span{font-size:11px;font-weight:800;letter-spacing:.4px;color:var(--lab2)}
 
   .info{background:var(--card);border-radius:14px;padding:13px 15px;font-size:13.5px;
-    color:var(--lab2);line-height:1.5;margin-bottom:12px}
+    color:var(--lab2);line-height:1.5;margin-bottom:12px;box-shadow:0 1px 3px rgba(60,50,30,.06)}
   .info b{color:var(--lab)}
-  .info.pk{background:rgba(255,214,10,.1)}
-  .info.warn{background:rgba(255,159,10,.12)}
+  .info.pk{background:#fdf6df}
+  .info.warn{background:#fbeedd}
   .empty{text-align:center;color:var(--lab2);padding:60px 20px;font-size:15px}
 
-  /* journey chart */
-  .chart{background:var(--card);border-radius:18px;padding:14px 6px 8px;margin-top:12px}
+  .chart{background:var(--card);border-radius:18px;padding:14px 6px 8px;margin-top:12px;
+    box-shadow:0 1px 5px rgba(60,50,30,.08)}
   .chart svg{display:block;overflow:visible}
-  .chart .cd{fill:#fff;font:800 11px -apple-system,sans-serif;letter-spacing:.8px}
+  .chart .cd{fill:var(--lab);font:800 11px -apple-system,sans-serif;letter-spacing:.8px}
   .chart .cs{fill:var(--lab2);font:600 10px -apple-system,sans-serif}
   .chart .cm{fill:var(--lab2);font:700 10px -apple-system,sans-serif}
-  .chart .cl{fill:var(--lab3);font:600 8.5px -apple-system,sans-serif}
+  .chart .cl{fill:var(--lab3);font:700 8.5px -apple-system,sans-serif}
   .chart .ci{font-size:11px}
-  /* next milestones */
   .ms{display:flex;align-items:center;gap:12px;background:var(--card);
-    border-radius:14px;padding:12px 14px;margin-bottom:9px}
+    border-radius:14px;padding:12px 14px;margin-bottom:9px;box-shadow:0 1px 4px rgba(60,50,30,.07)}
   .msi{width:38px;height:38px;border-radius:11px;background:var(--card2);flex:none;
     display:flex;align-items:center;justify-content:center;font-size:19px}
   .msb{flex:1;min-width:0}
   .msn{font-size:15px;font-weight:700;letter-spacing:-.3px}
   .msm{font-size:12.5px;color:var(--lab2);margin-top:2px}
-  .msd{flex:none;font-size:10px;font-weight:700;color:var(--lab3);letter-spacing:.4px}
-  .mynote{background:rgba(255,214,10,.1);border-left:3px solid var(--yellow);
-    border-radius:8px;padding:9px 11px;margin-top:10px;font-size:13.5px;color:#f0e6b8;line-height:1.45}
-  .acts a.done{background:rgba(48,209,88,.2);color:#5ee87f}
-  .card.beenthere{opacity:.62}
-  .tonight{background:var(--card);border-radius:18px;padding:15px 16px;margin-top:12px;
-    border:1px solid rgba(191,90,240,.45)}
-  .tk{font-size:11px;font-weight:800;letter-spacing:.9px;color:#d9a3f5}
+  .msd{flex:none;font-size:10px;font-weight:800;color:var(--lab3);letter-spacing:.4px}
+
+  .tonight{background:linear-gradient(135deg,#fff,#f6f0ff);border-radius:18px;padding:15px 16px;margin-top:12px;
+    border:1px solid rgba(124,58,237,.25);box-shadow:0 1px 5px rgba(60,50,30,.07)}
+  .tk{font-size:11px;font-weight:800;letter-spacing:.9px;color:var(--purple)}
   .tv{font-size:19px;font-weight:800;letter-spacing:-.5px;margin-top:5px}
   .tm{font-size:12.5px;color:var(--lab2);margin-top:4px;line-height:1.45}
 
-  /* ---------- map ---------- */
-  #map{height:calc(100vh - 150px - var(--sb));width:100%;background:var(--card);display:none}
+  #map{height:calc(100vh - 150px - var(--sb));width:100%;background:#dceaf2;display:none}
   body.mapview #map{display:block}
   body.mapview #list{display:none}
-  body.mapview{padding-bottom:calc(56px + var(--sb))}
-  .leaflet-container{font-family:inherit;background:#1c1c1e}
-  .leaflet-popup-content-wrapper{background:#1c1c1e;color:#fff;border-radius:14px}
-  .leaflet-popup-tip{background:#1c1c1e}
+  .leaflet-container{font-family:inherit;background:#dceaf2}
+  .leaflet-popup-content-wrapper{background:#fff;color:var(--lab);border-radius:14px}
+  .leaflet-popup-tip{background:#fff}
   .leaflet-popup-content{margin:12px 14px;font-size:14px;line-height:1.4}
-  .leaflet-popup-content a{color:var(--blue);font-weight:600}
-  .leaflet-bar a{background:#1c1c1e;color:#fff;border-color:#38383a}
-  .pin{border-radius:50%;border:2px solid #000;box-shadow:0 1px 5px rgba(0,0,0,.6)}
-  .me{background:var(--blue);border:3px solid #fff;border-radius:50%;box-shadow:0 0 0 7px rgba(10,132,255,.25)}
+  .leaflet-popup-content a{color:var(--blue);font-weight:700}
+  .leaflet-bar a{background:#fff;color:var(--lab);border-color:var(--sep)}
+  .pin{border-radius:50%;border:2px solid #fff;box-shadow:0 1px 5px rgba(40,40,40,.4)}
+  .me{background:var(--blue);border:3px solid #fff;border-radius:50%;box-shadow:0 0 0 7px rgba(0,119,182,.22)}
 
-  /* ---------- tab bar ---------- */
   .tabbar{position:fixed;left:0;right:0;bottom:0;z-index:100;display:flex;
-    padding:6px 4px calc(var(--sb) + 4px);background:rgba(20,20,22,.88);
+    padding:6px 4px calc(var(--sb) + 4px);background:rgba(255,255,255,.88);
     -webkit-backdrop-filter:saturate(180%) blur(20px);backdrop-filter:saturate(180%) blur(20px);
     border-top:.5px solid var(--sep)}
   .tab{flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;
-    padding:5px 2px;color:var(--lab3);font-size:10px;font-weight:600;letter-spacing:-.1px}
+    padding:5px 2px;color:var(--lab3);font-size:10px;font-weight:700;letter-spacing:-.1px}
   .tab svg{width:25px;height:25px;fill:currentColor}
   .tab.on{color:var(--blue)}
   .tab:active{opacity:.55}
@@ -232,16 +239,49 @@ window.onerror=function(msg,src,line){
 </script>
 <script>
 /* ================================================================
-   ▼▼▼  PUT YOUR GOOGLE MAPS API KEY ON THE NEXT LINE  ▼▼▼
-   Replace PASTE_YOUR_KEY_HERE with the key, keeping the quotes.
-   Leave it exactly as it is and the app works as it does today —
-   the Google features simply stay switched off.
+   GOOGLE MAPS KEY — do NOT edit this file to add it.
+
+   The key lives in your browser's storage, not in this file, so
+   replacing road-trip-companion.html never wipes it. It also means
+   the key is never committed to your public repo.
+
+   To add it: Plan tab → Google Maps API → "Add key".
+
+   (A config.js defining window.GMAPS_KEY also works, if you'd
+   rather keep it in a file that updates don't overwrite.)
    ================================================================ */
-const GMAPS_KEY = "AIzaSyBXXEWW09mHr4IDcj-LDuLXcCmdOYEHViM";
-/* ================================================================
-   ▲▲▲  THAT'S THE ONLY LINE YOU NEED TO CHANGE  ▲▲▲
-   ================================================================ */
-const GKEY_ON = GMAPS_KEY && GMAPS_KEY !== "PASTE_YOUR_KEY_HERE" && GMAPS_KEY.length > 20;
+const KEYSTORE='gmaps-key-v1';
+let GMAPS_KEY="", GKEY_ON=false, KEY_SOURCE="none";
+(function loadKey(){
+  let k="";
+  try{ k=localStorage.getItem(KEYSTORE)||""; }catch(e){}
+  if(k){ KEY_SOURCE="this device"; }
+  else if(typeof window!=='undefined' && window.GMAPS_KEY &&
+          window.GMAPS_KEY!=="PASTE_YOUR_KEY_HERE"){
+    k=window.GMAPS_KEY; KEY_SOURCE="config.js";
+  }
+  GMAPS_KEY=k;
+  GKEY_ON = !!k && k.length>20;
+})();
+function saveKey(k){
+  k=(k||"").trim();
+  try{ k ? localStorage.setItem(KEYSTORE,k) : localStorage.removeItem(KEYSTORE); }catch(e){}
+  GMAPS_KEY=k; GKEY_ON=!!k&&k.length>20; KEY_SOURCE=k?"this device":"none";
+  try{ localStorage.removeItem('gphoto-v1'); }catch(e){}   // cached URLs embed the old key
+  GPHOTO={};
+  render();
+}
+function promptKey(){
+  const cur=GMAPS_KEY?GMAPS_KEY.slice(0,8)+'…':'';
+  const v=prompt(
+    "Paste your Google Maps API key.\n\n"+
+    "It's saved in this browser only — never in the file, never in your GitHub repo.\n"+
+    "Leave blank and press OK to remove it.", cur.includes('…')?'':GMAPS_KEY);
+  if(v===null) return;
+  saveKey(v);
+  alert(v.trim()? "Key saved on this device.\n\nUpdating the app will no longer wipe it."
+                : "Key removed. The app is back on its built-in estimates.");
+}
 
 /* ---------- route: South Woodford -> M11 -> M25 -> M4 -> M5 -> A361 -> Woolacombe ---------- */
 const ROUTE = [
@@ -697,6 +737,8 @@ try{ GPHOTO=JSON.parse(localStorage.getItem('gphoto-v1')||'{}') }catch(e){}
 const saveGPhoto=()=>{try{localStorage.setItem('gphoto-v1',JSON.stringify(GPHOTO))}catch(e){}};
 
 let photoQueue=[], photoBusy=false;
+const photoAsked=new Set();     // stops re-renders re-queueing the same hotel forever
+let photoTimer=null;
 async function fetchPhoto(p){
   if(!GKEY_ON||GPHOTO[p.n]!==undefined) return;
   GPHOTO[p.n]=null;                                   // mark as tried, avoid loops
@@ -714,16 +756,34 @@ async function fetchPhoto(p){
   }catch(e){ /* quota, bad key, offline — stay silent, card keeps its logo */ }
   saveGPhoto();
 }
+/* Queue photos once per place, ever. Render ONCE when a batch lands —
+   the old version re-rendered after every fetch, and each render queued
+   more work, which is what made the app crawl. */
+function queuePhotos(list){
+  if(!GKEY_ON) return;
+  let added=0;
+  list.forEach(p=>{
+    if(!photoAsked.has(p.n) && GPHOTO[p.n]===undefined){
+      photoAsked.add(p.n); photoQueue.push(p); added++;
+    }
+  });
+  if(added) drainPhotoQueue();
+}
 async function drainPhotoQueue(){
   if(photoBusy||!GKEY_ON) return;
   photoBusy=true;
+  let landed=false;
   while(photoQueue.length){
     const p=photoQueue.shift();
     await fetchPhoto(p);
+    if(GPHOTO[p.n]) landed=true;
     await new Promise(r=>setTimeout(r,250));          // gentle on the quota
   }
   photoBusy=false;
-  render();
+  if(landed){                                         // one debounced repaint
+    clearTimeout(photoTimer);
+    photoTimer=setTimeout(()=>render(),400);
+  }
 }
 
 const photoOf=(p,w)=>{
@@ -795,7 +855,7 @@ P.forEach((p,i)=>{
 /* ============================================================
    UI LAYER — iPhone-first
    ============================================================ */
-const COLOR={hotel:"#bf5af0",services:"#40c8e0",food:"#ff9f0a",nt:"#30d158"};
+const COLOR={hotel:"#7c3aed",services:"#0891b2",food:"#e07b1f",nt:"#178a45"};
 const CATNAME={hotel:"Hotel",services:"Services",food:"Food",nt:"National Trust"};
 const listEl=document.getElementById('list'),
       chipsEl=document.getElementById('chips'),
@@ -867,9 +927,9 @@ let map=null,layer=null,HAS_MAP=false,meMarker=null,meAcc=null,me=null;
 try{
   if(typeof L!=='undefined'&&L&&L.map){
     map=L.map('map').setView([51.35,-2.2],7);
-    L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png',
+    L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png',
       {maxZoom:19,attribution:'&copy; OpenStreetMap &copy; CARTO'}).addTo(map);
-    L.polyline(ROUTE,{color:'#0a84ff',weight:4,opacity:.8}).addTo(map);
+    L.polyline(ROUTE,{color:'#0077b6',weight:4,opacity:.85}).addTo(map);
     L.circleMarker(ROUTE[0],{radius:6,color:'#fff',weight:2,fillColor:'#0a84ff',fillOpacity:1})
       .addTo(map).bindPopup('<b>Start</b><br>South Woodford');
     L.circleMarker(ROUTE[ROUTE.length-1],{radius:7,color:'#fff',weight:2,fillColor:'#ff375f',fillOpacity:1})
@@ -888,10 +948,10 @@ function drawMap(items){
     L.marker([p.lat,p.lng],{icon:L.divIcon({className:'',iconSize:[s,s],iconAnchor:[s/2,s/2],
       html:`<div class="pin" style="width:${s}px;height:${s}px;background:${p.pk?'#ffd60a':COLOR[p.c]}"></div>`})})
       .addTo(layer).bindPopup(
-      `<b>${p.n}</b><br><span style="color:#98989f">${p.jn} · ${p.detour} mi detour${p.p?` · <b style="color:#30d158">£${p.p}</b>`:''}</span>`+
-      (p.dist!=null?`<br><span style="color:#0a84ff"><b>${fmtD(p.dist)} from you</b></span>`:'')+
-      (p.tesla===1?'<br><span style="color:#ff8078">⚡ Tesla Supercharger</span>':'')+
-      (p.pk?`<br><span style="color:#ffd60a">✦ Pokémon ${p.pk==='trail'?'Mega Evolution Trail':p.pk==='zone'?'zone':'stickers'}</span>`:'')+
+      `<b>${p.n}</b><br><span style="color:#6f6a5e">${p.jn} · ${p.detour} mi detour${p.p?` · <b style="color:#178a45">£${p.p}</b>`:''}</span>`+
+      (p.dist!=null?`<br><span style="color:#0077b6"><b>${fmtD(p.dist)} from you</b></span>`:'')+
+      (p.tesla===1?'<br><span style="color:#c0392b">⚡ Tesla Supercharger</span>':'')+
+      (p.pk?`<br><span style="color:#8a6100">✦ Pokémon ${p.pk==='trail'?'Mega Evolution Trail':p.pk==='zone'?'zone':'stickers'}</span>`:'')+
       `<br><br><a href="${mapsUrl(p)}" target="_blank">Directions</a> · <a href="${bookUrl(p)}" target="_blank">${p.c==='hotel'?'Book':'Info'}</a>`);
   });
 }
@@ -1143,32 +1203,39 @@ function journeyChart(nowMi){
       <text x="${X0}" y="${y-16}" class="cd">DAY ${day}</text>
       <text x="${X0+46}" y="${y-16}" class="cs">${day===1?'Fri · London → '+STATE.tonightName:'Sat · '+STATE.tonightName+' → Woolacombe'}</text>
       <text x="${X0+XW}" y="${y-16}" class="cm" text-anchor="end">${Math.round(done)} / ${Math.round(spanMi)} mi</text>
-      <rect x="${X0}" y="${y}" width="${XW}" height="9" rx="4.5" fill="#2c2c2e"/>
+      <rect x="${X0}" y="${y}" width="${XW}" height="9" rx="4.5" fill="#ece8dd"/>
       <rect x="${X0}" y="${y}" width="${Math.max(0,pct*XW)}" height="9" rx="4.5" fill="url(#g${day})"/>`;
+    /* Labels collide when milestones are close together (Membury is only 16
+       miles before the overnight stop). Stagger onto a second row instead. */
+    let lastX=-99, lastRow=1;
     pts.forEach(m=>{
       const px=x(m.mi), passed=nowMi>=m.mi-0.5;
-      s+=`<circle cx="${px}" cy="${y+4.5}" r="${passed?4.6:4}" fill="${passed?'#fff':'#1c1c1e'}" stroke="${passed?'none':'#5a5a5f'}" stroke-width="1.6"/>`;
-      s+=`<text x="${px}" y="${y+26}" class="cl" text-anchor="middle">${m.s}</text>`;
+      const row = (px-lastX < 56) ? (lastRow===1?2:1) : 1;
+      lastX=px; lastRow=row;
+      const ly = y + (row===1?26:38);
+      s+=`<circle cx="${px}" cy="${y+4.5}" r="${passed?4.6:4}" fill="${passed?'#fff':'#f7f4ee'}" stroke="${passed?'none':'#b3ac9c'}" stroke-width="1.6"/>`;
+      if(row===2) s+=`<line x1="${px}" y1="${y+11}" x2="${px}" y2="${y+30}" stroke="#d8d2c4" stroke-width="1"/>`;
+      s+=`<text x="${px}" y="${ly}" class="cl" text-anchor="middle">${m.s}</text>`;
       s+=`<text x="${px}" y="${y-4}" class="ci" text-anchor="middle">${m.i}</text>`;
     });
     if(here){
       const hx=X0+pct*XW;
-      s+=`<g><line x1="${hx}" y1="${y-9}" x2="${hx}" y2="${y+18}" stroke="#fff" stroke-width="2"/>
-        <circle cx="${hx}" cy="${y+4.5}" r="7.5" fill="#fff"/>
-        <circle cx="${hx}" cy="${y+4.5}" r="7.5" fill="none" stroke="#fff" stroke-width="2" opacity=".55">
+      s+=`<g><line x1="${hx}" y1="${y-9}" x2="${hx}" y2="${y+18}" stroke="#20242c" stroke-width="2"/>
+        <circle cx="${hx}" cy="${y+4.5}" r="7.5" fill="#fff" stroke="#20242c" stroke-width="2.5"/>
+        <circle cx="${hx}" cy="${y+4.5}" r="7.5" fill="none" stroke="#0077b6" stroke-width="2" opacity=".55">
           <animate attributeName="r" values="7.5;15;7.5" dur="2.2s" repeatCount="indefinite"/>
           <animate attributeName="opacity" values=".55;0;.55" dur="2.2s" repeatCount="indefinite"/>
         </circle></g>`;
     }
     return s+'</g>';
   };
-  return `<div class="chart"><svg viewBox="0 0 ${W} 132" width="100%" preserveAspectRatio="xMidYMid meet">
+  return `<div class="chart"><svg viewBox="0 0 ${W} 152" width="100%" preserveAspectRatio="xMidYMid meet">
     <defs>
       <linearGradient id="g1" x1="0" x2="1"><stop offset="0" stop-color="#0a84ff"/><stop offset="1" stop-color="#bf5af0"/></linearGradient>
       <linearGradient id="g2" x1="0" x2="1"><stop offset="0" stop-color="#bf5af0"/><stop offset="1" stop-color="#ff375f"/></linearGradient>
     </defs>
-    ${row(1,0,D1,32,'#0a84ff','#bf5af0')}
-    ${row(2,D1,D2,102,'#bf5af0','#ff375f')}
+    ${row(1,0,D1,34,'#0a84ff','#bf5af0')}
+    ${row(2,D1,D2,114,'#bf5af0','#ff375f')}
   </svg></div>`;
 }
 
@@ -1325,8 +1392,8 @@ function card(p){
   const ph=!!photoOf(p);
   const t=[];
   if(p.dist!=null) t.push(`<span class="dist">${distTime(p)}</span>`);
-  if(p.veg>=3) t.push('<span class="tag" style="background:rgba(48,209,88,.18);color:#5ee87f">🌱 excellent veggie</span>');
-  else if(p.veg===2) t.push('<span class="tag" style="background:rgba(48,209,88,.13);color:#5ee87f">🌱 good veggie</span>');
+  if(p.veg>=3) t.push('<span class="tag near">🌱 excellent veggie</span>');
+  else if(p.veg===2) t.push('<span class="tag near">🌱 good veggie</span>');
   else if(p.veg===1) t.push('<span class="tag warn">🌱 limited veggie</span>');
   if(p.ahead!=null){
     t.push(p.ahead>2
@@ -1341,6 +1408,10 @@ function card(p){
   if(p.pk==='trail') t.push('<span class="tag pk">✦ Mega Evolution Trail</span>');
   if(p.pk==='zone') t.push('<span class="tag pk">✦ Pokémon zone</span>');
   if(p.pk==='stickers') t.push('<span class="tag pk">✦ Pokémon stickers</span>');
+  if(p.pub&&p.c==='food'&&P.some(x=>x.c==='hotel'&&x.n===p.n))
+    t.push('<span class="tag hi">🛏 also has rooms</span>');
+  if(p.c==='hotel'&&P.some(x=>x.c==='food'&&x.n===p.n))
+    t.push('<span class="tag hi">🍽 good pub food</span>');
   if(p.soldout) t.push('<span class="tag warn">SOLD OUT</span>');
   if(p.check) t.push('<span class="tag warn">verify first</span>');
   if(p.op) t.push(`<span class="tag">${p.op}</span>`);
@@ -1424,16 +1495,37 @@ function nearScreen(){
        <div class="v">${p.n}</div><div class="m">${distTime(p)}${extra?' · '+extra:''}${p.ahead>2?' · ahead':p.ahead<-2?' · behind you':''}</div></a>`
     : `<div class="quad"><div class="k">${k}</div><div class="v" style="color:var(--lab2)">none in list</div></div>`;
 
-  h+=`<div class="quads">
-    ${q('Nearest services',svc)}
-    ${q('Nearest Tesla charge',charge)}
-    ${q('Nearest hotel',hotel,hotel?'£'+hotel.p:'')}
-    ${q('Nearest Wagamama / GBK',waga)}
-    ${q('Nearest good veggie pub',pub)}
-    ${q('Nearest anything',near(p=>true))}
-  </div>`;
+  /* Only show the general summary when nothing is filtered — otherwise it
+     contradicts the filter you just chose and looks like it hasn't worked. */
+  if(sub==='all'){
+    h+=`<div class="quads">
+      ${q('Nearest services',svc)}
+      ${q('Nearest Tesla charge',charge)}
+      ${q('Nearest hotel',hotel,hotel?'£'+hotel.p:'')}
+      ${q('Nearest Wagamama / GBK',waga)}
+      ${q('Nearest good veggie pub',pub)}
+      ${q('Nearest anything',near(p=>true))}
+    </div>`;
+  } else {
+    const nm={hotel:'hotels',services:'services',food:'food',nt:'National Trust places'}[sub]||sub;
+    const top=near(p=>p.c===sub);
+    h+=`<div class="quads">
+      ${q('Nearest '+nm.replace(/s$/,''),top)}
+      <a class="quad" href="#" onclick="sub='all';render();return false">
+        <div class="k">Filtered to ${nm}</div>
+        <div class="v" style="color:var(--blue)">Show everything again</div>
+        <div class="m">${P.filter(p=>p.c===sub).length} in the app</div></a>
+    </div>`;
+  }
 
-  let items=[...P].filter(p=>sub==='all'||p.c===sub).sort((a,b)=>a.dist-b.dist);
+  /* Six pubs are listed twice — once as somewhere to sleep, once as somewhere
+     to eat. Useful on their own tabs, confusing back-to-back in one list, so
+     the "Everything" view keeps only the hotel entry. */
+  const hotelNames=new Set(P.filter(p=>p.c==='hotel').map(p=>p.n));
+  let items=[...P]
+    .filter(p=>sub==='all'||p.c===sub)
+    .filter(p=>!(sub==='all'&&p.c==='food'&&hotelNames.has(p.n)))
+    .sort((a,b)=>a.dist-b.dist);
   /* how far along the route each place sits relative to you */
   items.forEach(p=>p.ahead=p.routeMi-pr.km);
 
@@ -1484,17 +1576,118 @@ function planScreen(){
   return h;
 }
 
+/* ---------- Hotels within 20 minutes of wherever you are ---------- */
+const DRIVE_MINS=20;
+function nearbyStay(){
+  if(!me) return `<div class="info"><b>Turn on location</b> and this becomes a shortlist of
+    everywhere you could actually be checked into within ${DRIVE_MINS} minutes.</div>`;
+
+  P.forEach(p=>p.dist=haversine(me.lat,me.lng,p.lat,p.lng));
+  const within=P.filter(p=>p.c==='hotel'&&!p.soldout&&p.detour<=MAX_DETOUR&&etaMin(p.dist)<=DRIVE_MINS)
+                .sort((a,b)=>a.dist-b.dist);
+
+  let h=`<div class="sechead">Within ${DRIVE_MINS} minutes of you<small>${
+    within.length?within.length+' with 2 rooms free on 14 Aug · nearest first':'nothing that close — see the full list below'}</small></div>`;
+
+  if(!within.length){
+    const next=P.filter(p=>p.c==='hotel'&&!p.soldout).sort((a,b)=>a.dist-b.dist)[0];
+    if(next) h+=`<div class="info">Closest is <b>${next.n}</b> — ${distTime(next)} away, £${next.p}.</div>`;
+  } else {
+    const top=within.slice(0,5);
+    const cheapest=[...top].sort((a,b)=>a.p-b.p)[0];
+    const closest=top[0];
+    h+=`<div class="quads">
+      <a class="quad" href="${mapsUrl(closest)}" target="_blank"><div class="k">CLOSEST</div>
+        <div class="v">${closest.n}</div><div class="m">${distTime(closest)} · £${closest.p}</div></a>
+      <a class="quad" href="${mapsUrl(cheapest)}" target="_blank"><div class="k">CHEAPEST OF THE FIVE</div>
+        <div class="v">${cheapest.n}</div><div class="m">${distTime(cheapest)} · £${cheapest.p}</div></a>
+    </div>`;
+    h+='<div class="hrail">';           /* swipeable shortlist, not a wall of cards */
+    top.forEach(p=>h+=card(p));
+    h+='</div>';
+  }
+
+  h+=`<div class="acts" style="margin-top:4px">
+    <a class="pri" href="#" onclick="findMoreHotels();return false">${
+      GKEY_ON?'🔎 Search Google for more nearby':'🔎 Search Google (needs a key)'}</a>
+  </div><div id="moreout"></div>`;
+  return h;
+}
+
+/* Live discovery via Places — finds hotels that aren't in my curated list.
+   Google can tell us they EXIST and how they're rated. It cannot tell us
+   whether they have rooms free, so each one links out to check. */
+async function findMoreHotels(){
+  const out=document.getElementById('moreout');
+  if(!out) return;
+  if(!GKEY_ON){
+    out.innerHTML=`<div class="info warn"><b>Needs a Google key.</b> Add one at the bottom of the Plan tab.</div>`;
+    return;
+  }
+  if(!me){ out.innerHTML=`<div class="info warn">Turn on location first.</div>`; return; }
+  out.innerHTML=`<div class="info">Searching Google…</div>`;
+  try{
+    const r=await fetch('https://places.googleapis.com/v1/places:searchNearby',{
+      method:'POST',
+      headers:{'Content-Type':'application/json','X-Goog-Api-Key':GMAPS_KEY,
+        'X-Goog-FieldMask':'places.displayName,places.rating,places.userRatingCount,places.location,places.formattedAddress'},
+      body:JSON.stringify({includedTypes:['lodging'],maxResultCount:12,
+        locationRestriction:{circle:{center:{latitude:me.lat,longitude:me.lng},radius:16000}}})
+    });
+    const t=await r.text();
+    if(!r.ok){ out.innerHTML=`<div class="info warn"><b>Search failed (${r.status})</b><br>${explain(r.status,t)}</div>`; return; }
+    const j=JSON.parse(t);
+    const known=new Set(P.filter(p=>p.c==='hotel').map(p=>p.n.toLowerCase()));
+    const list=(j.places||[]).map(pl=>{
+      const nm=pl.displayName?pl.displayName.text:'?';
+      const d=haversine(me.lat,me.lng,pl.location.latitude,pl.location.longitude);
+      return {nm,d,rating:pl.rating,count:pl.userRatingCount,addr:pl.formattedAddress,
+              lat:pl.location.latitude,lng:pl.location.longitude,
+              isNew:![...known].some(k=>k.includes(nm.toLowerCase().slice(0,12)))};
+    }).filter(x=>etaMin(x.d)<=DRIVE_MINS).sort((a,b)=>a.d-b.d).slice(0,8);
+
+    if(!list.length){ out.innerHTML=`<div class="info">Google found nothing extra within ${DRIVE_MINS} minutes.</div>`; return; }
+    out.innerHTML=`<div class="sechead" style="margin-top:16px">From Google<small>${list.length} nearby · availability not known, tap to check</small></div>`+
+      list.map(x=>`<div class="card"><div class="body">
+        <div class="crow"><div class="cname" style="flex:1">${x.nm}</div></div>
+        <div class="tags">
+          <span class="dist">${fmtD(x.d)} · ${fmtT(etaMin(x.d))}</span>
+          ${x.rating?`<span class="tag hi">★ ${x.rating} (${x.count||0})</span>`:''}
+          ${x.isNew?'<span class="tag pk">not in my list</span>':'<span class="tag">already listed</span>'}
+        </div>
+        <div class="note">${x.addr||''}</div>
+        <div class="acts">
+          <a href="${ll2(x.lat,x.lng)}" target="_blank" rel="noopener">Directions</a>
+          <a class="pri" target="_blank" rel="noopener"
+             href="https://www.booking.com/searchresults.html?ss=${encodeURIComponent(x.nm)}&checkin=2026-08-14&checkout=2026-08-15&group_adults=4&no_rooms=2&group_children=0">Check rooms</a>
+        </div></div></div>`).join('')+
+      `<div class="info" style="font-size:12px">Google knows these exist and how they're rated. It does <b>not</b> know if they have rooms free — that's what "Check rooms" is for.</div>`;
+  }catch(e){
+    out.innerHTML=`<div class="info warn">Couldn't reach Google. No signal, or the request was blocked.</div>`;
+  }
+}
+
 /* ---------- Google API self-test ---------- */
 function apiPanel(){
   const origin=(location.origin||'file://')+'/*';
   return `<div class="sechead" style="margin-top:22px">Google Maps API<small>${
-    GKEY_ON?'A key is installed':'No key installed — the app runs on its built-in estimates'}</small></div>
+    GKEY_ON?'Key stored on '+KEY_SOURCE:'No key — the app runs on its built-in estimates'}</small></div>
   <div class="info">
-    <b>Status:</b> ${GKEY_ON?'🟡 Key present, not yet tested':'⚪️ Not configured'}<br>
+    <b>Status:</b> ${GKEY_ON?'🟢 Key installed ('+GMAPS_KEY.slice(0,6)+'…'+GMAPS_KEY.slice(-4)+')':'⚪️ Not configured'}<br>
+    <b>Stored in:</b> ${GKEY_ON?'your browser on this device — <b>not</b> in the file, <b>not</b> in your GitHub repo':'—'}<br>
     <b>This page's address:</b> <code>${origin}</code><br>
     <span style="font-size:12px">Your key's website restriction must match that exactly.</span>
   </div>
-  <div class="acts"><a class="pri" href="#" onclick="runApiTest();return false">Test the key now</a></div>
+  <div class="acts">
+    <a class="pri" href="#" onclick="promptKey();return false">${GKEY_ON?'Change key':'Add key'}</a>
+    ${GKEY_ON?'<a href="#" onclick="runApiTest();return false">Test it</a>':''}
+    ${GKEY_ON?'<a href="#" onclick="saveKey(\'\');return false">Remove</a>':''}
+  </div>
+  <div class="info" style="font-size:12.5px;margin-top:10px">
+    ✅ <b>Safe from updates.</b> The key is held in this browser, so replacing
+    <code>road-trip-companion.html</code> won't wipe it. You'll only re-enter it if you
+    clear Safari's data, or open the app on a different phone.
+  </div>
   <div id="apiout"></div>`;
 }
 
@@ -1603,8 +1796,25 @@ function listScreen(){
     <b>Dyrham Park (M4 J18)</b> is one of only 16 places nationally with the <b>Mega Evolution TCG Trail</b>.
     <b>Lacock, Tyntesfield, Cliveden and Killerton</b> run full <b>Pokémon zones</b>.
     Sticker booklets at every Summer of Play site, and PokéStops, Gyms and in-game Routes at 140 NT places.</div>`;
-  if(filter==='hotel') h+=`<div class="info"><b>${P.filter(x=>x.c==='hotel'&&!x.soldout).length} hotels, every one with 2 rooms bookable for Fri 14 Aug</b> when I checked. 85–91% of local stock had already gone. Nothing left out on price except a few places over £600.<br><br>
+  if(filter==='hotel'&&sub==='all') h+=nearbyStay();
+  if(filter==='hotel') h+=`<div class="sechead" style="margin-top:20px">Everywhere on the route<small>${P.filter(x=>x.c==='hotel'&&!x.soldout).length} hotels</small></div>
+    <div class="info"><b>${P.filter(x=>x.c==='hotel'&&!x.soldout).length} hotels, every one with 2 rooms bookable for Fri 14 Aug</b> when I checked. 85–91% of local stock had already gone. Nothing left out on price except a few places over £600.<br><br>
     <b>On photos:</b> Booking.com serves its images with expiring tokens, so I can't embed them. The <b>Photos</b> button on each card opens image search for that hotel instead.</div>`;
+  if(filter==='food'&&sub==='all'){
+    const easy=P.filter(p=>p.c==='food'&&p.detour<=5&&((p.br||[]).some(b=>['waga','nandos','pe','fg'].includes(b))||p.veg>=2))
+                .sort((a,b)=>a.detour-b.detour).slice(0,6);
+    if(easy.length){
+      h+=`<div class="sechead">Easiest good stops<small>swipe · all within 5 miles of the road</small></div><div class="hrail">`;
+      easy.forEach(p=>h+=card(p)); h+=`</div>`;
+    }
+  }
+  if(filter==='nt'&&sub==='all'){
+    const pk=P.filter(p=>p.c==='nt'&&p.pk).sort((a,b)=>a.routeMi-b.routeMi).slice(0,6);
+    if(pk.length){
+      h+=`<div class="sechead">The Pokémon ones<small>swipe · in route order</small></div><div class="hrail">`;
+      pk.forEach(p=>h+=card(p)); h+=`</div>`;
+    }
+  }
   if(filter==='food') h+=`<div class="info"><b>GBK has shrunk to 12 UK branches</b> and none are on the route west of Reading — Honest Burgers bought and converted a dozen sites. Bracknell is your nearest, and it's 8 miles off M4 J10. The <b>Swindon Designer Outlet</b> (Wagamama + Five Guys + PizzaExpress, one car park, 2 miles off J16) is the far better stop.</div>`;
   if(!items.length)h+='<div class="empty">Nothing matches that filter.</div>';
   items.forEach(p=>h+=card(p));
@@ -1621,13 +1831,11 @@ function render(){
   listEl.innerHTML=h;
   /* photo cards: name lives in the caption, so blank the duplicate */
   [...listEl.querySelectorAll('.card.hasphoto .crow .cname')].forEach(e=>e.remove());
-  /* queue up Google photos for hotels on screen that don't have one yet */
-  if(GKEY_ON&&(filter==='hotel'||filter==='near')){
-    const want=P.filter(p=>p.c==='hotel'&&GPHOTO[p.n]===undefined&&!p.soldout)
-                .sort((a,b)=>(a.dist!=null?a.dist:a.routeMi)-(b.dist!=null?b.dist:b.routeMi))
-                .slice(0,8);
-    want.forEach(p=>{if(!photoQueue.includes(p))photoQueue.push(p)});
-    drainPhotoQueue();
+  /* Google photos: only on the Stay tab, only the six nearest, once each. */
+  if(GKEY_ON && filter==='hotel'){
+    queuePhotos(P.filter(p=>p.c==='hotel'&&!p.soldout)
+                 .sort((a,b)=>(a.dist!=null?a.dist:a.routeMi)-(b.dist!=null?b.dist:b.routeMi))
+                 .slice(0,6));
   }
 }
 function focusOn(id){const p=P[id];window.open(mapsUrl(p),'_blank')}
