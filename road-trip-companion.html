@@ -694,16 +694,16 @@ const ITIN=[
  note:"M25 J23 down to J15 is the second pinch point; it should ease past J16 (M40). Once you're on the M4 heading west it opens up."},
 {t:"20:15",n:"Reading Services (M4 J11–12)",k:"stop",mi:72,drv:0,ll:[51.4360,-1.0430],
  note:"⭐ <b>The one stop that matters on Friday.</b> Legs, loos, coffee, M&S Simply Food if you skipped dinner. <b>12 Tesla Superchargers</b> — charge here, it's the best-equipped stop on the M4. Allow 20 minutes."},
-{t:"20:45–20:55",n:"M4 J11 — five minutes to the hotel",k:"drive",mi:3,drv:8,
- note:"The 30-minute break at Reading Services, then straight off at the next junction. Feeling fresh instead? Membury is 25 min on (Days Inn £120, same car park as the services) and Liddington 35 min (Village Inn £141) — use <b>Tonight's stop → Change</b> if you push on."},
-{t:"~21:00",n:"Check in — Reading",k:"sleep",mi:72,drv:0,ll:[51.4180,-0.9840],
- note:"⭐ <b>Premier Inn Reading Gateway (M4 J11) — £132</b>, straight off the roundabout, Beefeater attached, free parking.<br><br><b>Cheaper:</b> Easyhotel £94 or Sure Hotel £97 in town. <b>By J12 for the quickest getaway:</b> Best Western Calcot £135.<br><br>Kids fed at the services, check-in by nine, done."},
+{t:"20:45–21:00",n:"M4 J12 → J13 → Yattendon",k:"drive",mi:9,drv:15,
+ note:"Seven miles on from the services, off at J13, then two miles of lanes north to the village. It's genuinely rural — the last stretch is unlit, so take it steadily in the dark."},
+{t:"~21:00",n:"Check in — The Royal Oak, Yattendon",k:"sleep",mi:76,drv:0,ll:[51.4650,-1.1930],
+ note:"⭐ <b>Booked.</b> 8.9/10, location scored 9.4 — a red-brick coaching inn on a village square in the Berkshire downs. Free parking, breakfast included, pay on arrival.<br><br><b>Kitchen closes around 21:00</b>, so eat at Reading Services or <b>ring ahead</b> to hold food back — worth a call on Friday afternoon either way.<br><br>Quiet village, so it should be a good night's sleep for the boys after the motorway."},
 
-{day:"SATURDAY 15 AUGUST",sub:"Dyrham Park &amp; the run to Devon &middot; ~170 miles &middot; ~4h driving"},
-{t:"07:45–08:45",n:"Breakfast, pack, away by 8:45",k:"stop",mi:72,drv:0,
- note:"Reading is an hour further from Dyrham than Swindon was, so the lazy start tightens a little: <b>leave by 08:45</b> to make the 10:00 car-park opening. Woolacombe check-in is 15:00–16:00, so there's still no prize for earlier."},
-{t:"08:45–09:55",n:"M4 J12 → J18 → A46 south",k:"drive",mi:60,drv:70,
- note:"Clear Saturday-morning running on the M4. Two miles south of J18 (Tormarton) on the A46. Sat nav SN14 8HY, enter the car park from the A46."},
+{day:"SATURDAY 15 AUGUST",sub:"Dyrham Park &amp; the run to Devon &middot; ~166 miles &middot; ~3h50 driving"},
+{t:"08:00–08:50",n:"Breakfast at the inn, away by 08:50",k:"stop",mi:76,drv:0,
+ note:"Breakfast is included, so eat properly before you go — it's an hour to Dyrham and the tea-room there doesn't open until 10:30. <b>Leave by 08:50</b> to make the 10:00 car-park opening. No prize for earlier: Woolacombe check-in is 15:00–16:00."},
+{t:"08:50–09:55",n:"Yattendon → M4 J13 → J18 → A46 south",k:"drive",mi:55,drv:65,
+ note:"Back down the lanes to J13, then a clear Saturday-morning run west. Dyrham is two miles south of J18 (Tormarton) on the A46 — sat nav SN14 8HY, and enter the car park from the A46."},
 {t:"10:00–12:15",n:"DYRHAM PARK — Pokémon TCG Mega Evolution Trail",k:"pk",mi:132,drv:0,ll:[51.4805,-2.3629],
  note:"⭐⭐⭐ <b>The reason for the whole detour.</b> One of only 16 National Trust places running the Mega Evolution Trail. Drop-in, <b>no booking needed</b>, running 8 Aug – 2 Sep, 10:00–17:00.<br><br><b>Parkland &amp; car park open 10:00</b> · tea-room 10:30 · house 11:30 · last entry 16:00.<br><br><b>Do this:</b> trail around the 270-acre parkland (allow 1.5h), then the play area and café at Old Lodge. Skip the house unless it's raining — the trail is the point.<br><br><b>Money:</b> family ticket £57.50 (£63.30 with Gift Aid) — <b>NT membership pays for itself in this one visit</b>. Parking £4/day, free for members. Car park uses the <b>JustPark app, code 80574 — download it before you arrive, phone signal on site is patchy</b>. That patchy signal also matters if anyone's playing Pokémon GO.<br><br>Assistance dogs only, because of the deer herd."},
 {t:"12:15–13:50",n:"A46 → M4 J18 → J20 Almondsbury → M5 south",k:"drive",mi:62,drv:95,
@@ -1075,8 +1075,8 @@ function openFind(c){
    unavailable (private browsing, restricted settings) the app still works,
    it just forgets between sessions.
    ============================================================ */
-const SKEY='woolacombe-trip-v2';   /* v2: default overnight moved to Reading */
-const DEFAULT_STATE={tonightMi:69, tonightName:"Reading — just past the services", visited:{}, notes:{}};
+const SKEY='woolacombe-trip-v3';   /* v3: overnight booked at The Royal Oak, Yattendon */
+const DEFAULT_STATE={tonightMi:75.6, tonightName:"The Royal Oak, Yattendon", visited:{}, notes:{}};
 let STATE=Object.assign({},DEFAULT_STATE);
 try{
   const raw=localStorage.getItem(SKEY);

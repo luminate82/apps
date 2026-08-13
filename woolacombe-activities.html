@@ -106,6 +106,9 @@ nav svg{width:25px;height:25px;display:block}
 
 #err{display:none;padding:20px;font:12px/1.5 ui-monospace,monospace;color:#c0392b;
   white-space:pre-wrap;word-break:break-word}
+  .art{position:relative}
+  .art img.photo{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+  .art img.photo.g{z-index:2}
 </style>
 </head>
 <body>
@@ -574,7 +577,7 @@ function card(x){
   var sl=slug(x.n);
   var t='';
   t+='<div class="card">';
-  t+='<div class="art">'+art(x.sc);
+  t+='<div class="art" data-slug="'+sl+'">'+art(x.sc);
   t+='<img class="photo" loading="lazy" alt="" src="img/'+sl+'.jpg" '
     +'onerror="this.parentNode.querySelectorAll(\'.credit\').forEach(function(c){c.remove()});this.remove();">';
   if(CREDITS[sl]) t+='<span class="credit">'+CREDITS[sl]+'</span>';
@@ -738,6 +741,117 @@ try{
   el.textContent='Render failed: '+(e&&e.message?e.message:e);
 }
 })();
+
+/* ============================================================
+   GOOGLE PLACES PHOTOS
+   Uses the SAME key you saved in the road trip app (localStorage
+   "gmaps-key-v1"), so there is nothing extra to set up. No key,
+   no network, or a failed lookup — the drawn artwork simply stays.
+   Photos come from Google's licensed Places API, not scraped from
+   anyone's website.
+   ============================================================ */
+var GKEY = "";
+try { GKEY = localStorage.getItem("gmaps-key-v1") || ""; } catch (e) {}
+var GON = !!GKEY && GKEY.length > 20;
+
+var GPIC = {};
+try { GPIC = JSON.parse(localStorage.getItem("wool-photos-v1") || "{}"); } catch (e) {}
+function savePics(){ try { localStorage.setItem("wool-photos-v1", JSON.stringify(GPIC)); } catch (e) {} }
+
+var picQueue = [], picBusy = false, picAsked = {};
+
+function paintPhotos(){
+  try {
+    var arts = document.querySelectorAll('.art[data-slug]');
+    Array.prototype.forEach.call(arts, function(el){
+      var sl = el.getAttribute('data-slug');
+      if (!GPIC[sl] || el.querySelector('img.photo.g')) return;
+      var img = document.createElement('img');
+      img.className = 'photo g';
+      img.loading = 'lazy';
+      img.decoding = 'async';
+      img.alt = '';
+      img.src = GPIC[sl];
+      img.onerror = function(){ this.remove(); };
+      el.appendChild(img);
+    });
+  } catch (e) {}
+}
+
+function fetchPic(name, sl){
+  return fetch('https://places.googleapis.com/v1/places:searchText', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'X-Goog-Api-Key': GKEY,
+      'X-Goog-FieldMask': 'places.photos,places.displayName'
+    },
+    body: JSON.stringify({ textQuery: name + ', North Devon, UK', maxResultCount: 1 })
+  }).then(function(r){
+    if (!r.ok) throw new Error(r.status);
+    return r.json();
+  }).then(function(j){
+    var p = j.places && j.places[0] && j.places[0].photos && j.places[0].photos[0];
+    if (p && p.name) {
+      GPIC[sl] = 'https://places.googleapis.com/v1/' + p.name + '/media?maxWidthPx=800&key=' + GKEY;
+    } else { GPIC[sl] = null; }
+    savePics();
+  }).catch(function(){ GPIC[sl] = null; savePics(); });
+}
+
+function drainPics(){
+  if (picBusy || !GON) return;
+  picBusy = true;
+  var landed = false;
+  function next(){
+    if (!picQueue.length) {
+      picBusy = false;
+      if (landed) paintPhotos();
+      return;
+    }
+    var job = picQueue.shift();
+    fetchPic(job.n, job.sl).then(function(){
+      if (GPIC[job.sl]) landed = true;
+      setTimeout(next, 250);           /* gentle on the quota */
+    });
+  }
+  next();
+}
+
+/* Called after every render: paint what we have, queue what's visible. */
+function photosPass(){
+  paintPhotos();
+  if (!GON) return;
+  try {
+    var arts = document.querySelectorAll('.art[data-slug]');
+    var added = 0;
+    Array.prototype.forEach.call(arts, function(el){
+      if (added >= 8) return;
+      var sl = el.getAttribute('data-slug');
+      if (picAsked[sl] || GPIC[sl] !== undefined) return;
+      var t = el.parentNode.querySelector('.ttl');
+      if (!t) return;
+      picAsked[sl] = 1;
+      picQueue.push({ n: t.textContent, sl: sl });
+      added++;
+    });
+    if (picQueue.length) drainPics();
+  } catch (e) {}
+}
+
+/* Hook it onto the existing renderers without touching them. */
+['renderNear','renderRain','renderBig','renderWeek','setTab'].forEach(function(fn){
+  if (typeof window[fn] === 'function') {
+    var orig = window[fn];
+    window[fn] = function(){
+      var r = orig.apply(this, arguments);
+      setTimeout(photosPass, 0);
+      return r;
+    };
+  }
+});
+setTimeout(photosPass, 60);
+
 </script>
 </body>
 </html>
