@@ -108,7 +108,16 @@ nav svg{width:25px;height:25px;display:block}
   white-space:pre-wrap;word-break:break-word}
   .art{position:relative}
   .art img.photo{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
-  .art img.photo.g{z-index:2}
+  .gcar{position:absolute;inset:0;z-index:2}
+  .gstrip{display:flex;height:100%;overflow-x:auto;scroll-snap-type:x mandatory;
+    -webkit-overflow-scrolling:touch;scrollbar-width:none}
+  .gstrip::-webkit-scrollbar{display:none}
+  .gstrip img{flex:0 0 100%;width:100%;height:100%;object-fit:cover;scroll-snap-align:center}
+  .gdots{position:absolute;left:0;right:0;bottom:7px;display:flex;justify-content:center;gap:5px;
+    pointer-events:none}
+  .gdots i{width:6px;height:6px;border-radius:50%;background:rgba(255,255,255,.55);
+    box-shadow:0 0 3px rgba(0,0,0,.5);transition:background .2s}
+  .gdots i.on{background:#fff}
 </style>
 </head>
 <body>
@@ -760,22 +769,97 @@ function savePics(){ try { localStorage.setItem("wool-photos-v1", JSON.stringify
 
 var picQueue = [], picBusy = false, picAsked = {};
 
+/* Cache Storage keeps the actual image BYTES on the device, so a photo is
+   only ever downloaded from Google once. Quota is tens of MB (localStorage
+   would be far too small). Falls back to a plain <img> if unavailable. */
+var IMGCACHE = 'wool-img-v1';
+var canCache = (typeof caches !== 'undefined');
+
+function setSrc(img, url){
+  if (!canCache) { img.src = url; return; }
+  caches.open(IMGCACHE).then(function(c){
+    return c.match(url).then(function(hit){
+      if (hit) return hit.blob();
+      return fetch(url).then(function(res){
+        if (res && res.ok) { try { c.put(url, res.clone()); } catch(e){} }
+        return res.blob();
+      });
+    });
+  }).then(function(b){
+    img.src = URL.createObjectURL(b);
+  }).catch(function(){ img.src = url; });
+}
+
+/* Only the first photo loads up front. The other five are fetched the moment
+   you actually swipe — so cards you never touch cost one photo, not six. */
+function expandStrip(strip, urls){
+  if (strip.getAttribute('data-full')) return;
+  strip.setAttribute('data-full','1');
+  for (var i = 1; i < urls.length; i++) {
+    var im = document.createElement('img');
+    im.decoding = 'async'; im.alt = '';
+    im.onerror = function(){ this.remove(); };
+    setSrc(im, urls[i]);
+    strip.appendChild(im);
+  }
+}
+
 function paintPhotos(){
   try {
     var arts = document.querySelectorAll('.art[data-slug]');
     Array.prototype.forEach.call(arts, function(el){
       var sl = el.getAttribute('data-slug');
-      if (!GPIC[sl] || el.querySelector('img.photo.g')) return;
-      var img = document.createElement('img');
-      img.className = 'photo g';
-      img.loading = 'lazy';
-      img.decoding = 'async';
-      img.alt = '';
-      img.src = GPIC[sl];
-      img.onerror = function(){ this.remove(); };
-      el.appendChild(img);
+      var urls = GPIC[sl];
+      if (!urls || !urls.length || el.querySelector('.gcar')) return;
+
+      var wrap = document.createElement('div');
+      wrap.className = 'gcar';
+
+      var strip = document.createElement('div');
+      strip.className = 'gstrip';
+      var first = document.createElement('img');
+      first.decoding = 'async'; first.alt = '';
+      first.onerror = function(){
+        var s = this.parentNode; this.remove();
+        if (s && !s.querySelector('img')) { var w = s.parentNode; if (w) w.remove(); }
+        syncDots(wrap);
+      };
+      setSrc(first, urls[0]);
+      strip.appendChild(first);
+      if (urls.length > 1) {
+        var grow = function(){ expandStrip(strip, urls); };
+        strip.addEventListener('touchstart', grow, { passive: true, once: true });
+        strip.addEventListener('mouseenter', grow, { once: true });
+        strip.addEventListener('scroll', grow, { passive: true, once: true });
+      }
+      wrap.appendChild(strip);
+
+      if (urls.length > 1) {
+        var dots = document.createElement('div');
+        dots.className = 'gdots';
+        urls.forEach(function(_, i){
+          var d = document.createElement('i');
+          if (!i) d.className = 'on';
+          dots.appendChild(d);
+        });
+        wrap.appendChild(dots);
+        strip.addEventListener('scroll', function(){
+          var w = strip.clientWidth || 1;
+          var idx = Math.round(strip.scrollLeft / w);
+          var ds = dots.querySelectorAll('i');
+          for (var i = 0; i < ds.length; i++) ds[i].className = (i === idx ? 'on' : '');
+        }, { passive: true });
+      }
+      el.appendChild(wrap);
     });
   } catch (e) {}
+}
+function syncDots(wrap){
+  try{
+    var n = wrap.querySelectorAll('.gstrip img').length;
+    var d = wrap.querySelector('.gdots');
+    if (d && n < 2) d.remove();
+  }catch(e){}
 }
 
 function fetchPic(name, sl){
@@ -791,10 +875,11 @@ function fetchPic(name, sl){
     if (!r.ok) throw new Error(r.status);
     return r.json();
   }).then(function(j){
-    var p = j.places && j.places[0] && j.places[0].photos && j.places[0].photos[0];
-    if (p && p.name) {
-      GPIC[sl] = 'https://places.googleapis.com/v1/' + p.name + '/media?maxWidthPx=800&key=' + GKEY;
-    } else { GPIC[sl] = null; }
+    var ph = (j.places && j.places[0] && j.places[0].photos) || [];
+    var urls = ph.slice(0, 6).map(function(x){
+      return 'https://places.googleapis.com/v1/' + x.name + '/media?maxWidthPx=600&key=' + GKEY;
+    });
+    GPIC[sl] = urls.length ? urls : null;
     savePics();
   }).catch(function(){ GPIC[sl] = null; savePics(); });
 }
