@@ -803,7 +803,7 @@ var picQueue = [], picBusy = false, picAsked = {};
 /* Cache Storage keeps the actual image BYTES on the device, so a photo is
    only ever downloaded from Google once. Quota is tens of MB (localStorage
    would be far too small). Falls back to a plain <img> if unavailable. */
-var BUILD = '2026-08-13f';
+var BUILD = '2026-08-13g';
 var PICOK = 0, PICFAIL = 0;
 var IMGCACHE = 'wool-img-v1';
 var canCache = (typeof caches !== 'undefined');
@@ -814,7 +814,25 @@ function setSrc(img, url){
      with an empty blob, which silently produced a broken image. Caching is now
      a background bonus that cannot affect whether the photo appears. */
   img.src = url;
-  img.addEventListener('error', function(){ PICFAIL++; photoStatus(); }, { once: true });
+  if (!window.__picUrl) window.__picUrl = url;
+  img.addEventListener('error', function(){
+    PICFAIL++;
+    if (!window.__picDiag) {          /* on the FIRST failure, ask Google why */
+      window.__picDiag = 'checking…';
+      fetch(url).then(function(r){
+        return r.text().then(function(t){
+          var msg = t;
+          try { var j = JSON.parse(t); msg = (j.error && (j.error.message || j.error.status)) || t; } catch(e){}
+          window.__picDiag = 'HTTP ' + r.status + ' — ' + String(msg).slice(0, 220);
+          photoStatus();
+        });
+      }).catch(function(e){
+        window.__picDiag = 'request blocked before reaching Google (' + e.message + ')';
+        photoStatus();
+      });
+    }
+    photoStatus();
+  }, { once: true });
   img.addEventListener('load',  function(){ PICOK++;  photoStatus(); }, { once: true });
   if (!canCache) return;
   try {
@@ -1071,7 +1089,9 @@ function photoStatus(){
       if (txt) txt.innerHTML = 'On · key ' + GKEY.slice(0,6) + '…' + GKEY.slice(-4)
         + '<br>' + got + ' of ' + tried + ' places looked up'
         + (picQueue.length ? ' · ' + picQueue.length + ' loading' : '')
-        + '<br>images: ' + PICOK + ' shown, ' + PICFAIL + ' failed';
+        + '<br>images: ' + PICOK + ' shown, ' + PICFAIL + ' failed'
+        + (window.__picDiag ? '<br><span style="color:#9a5b00">why: ' + String(window.__picDiag).replace(/</g,'&lt;') + '</span>' : '')
+        + (PICFAIL ? '<br><span style="font-size:11px;opacity:.8">first URL: ' + String(window.__picUrl||'').replace(/key=[^&]*/,'key=…').slice(0,110) + '</span>' : '');
       if (keyb) keyb.textContent = 'Change key';
       if (testb) testb.style.display = '';
     } else {
