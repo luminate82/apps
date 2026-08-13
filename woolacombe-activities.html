@@ -118,6 +118,8 @@ nav svg{width:25px;height:25px;display:block}
   .gdots i{width:6px;height:6px;border-radius:50%;background:rgba(255,255,255,.55);
     box-shadow:0 0 3px rgba(0,0,0,.5);transition:background .2s}
   .gdots i.on{background:#fff}
+  main{display:block}
+  #photostat{margin:12px 16px 0}
   .pstat{background:#fff;border:1px solid var(--sep);border-radius:14px;padding:13px 15px;
     margin:0 0 14px;font-size:13.5px;color:var(--sec);line-height:1.5;
     box-shadow:0 1px 4px rgba(60,50,30,.08)}
@@ -132,6 +134,16 @@ nav svg{width:25px;height:25px;display:block}
 <body>
 
 <div id="err"></div>
+<div id="photostat" class="pstat nokey">
+  <b>📷 Photos</b><br>
+  <span id="pstxt">Checking for a Google Maps key…</span>
+  <div style="display:flex;gap:8px;flex-wrap:wrap">
+    <button class="pbtn" id="pkeybtn">Add key</button>
+    <button class="pbtn" id="ptestbtn" style="background:#f0ece3;color:#20242c;display:none">Test key</button>
+  </div>
+  <div id="ptest" style="margin-top:8px;font-size:12.5px;line-height:1.45"></div>
+  <div id="pbuild" style="margin-top:8px;font-size:10px;opacity:.65"></div>
+</div>
 <header><h1 id="ttl">Near the park</h1><div class="sub" id="sb">Loading…</div></header>
 <main>
   <div class="pane on" id="p-near"></div>
@@ -781,6 +793,7 @@ var picQueue = [], picBusy = false, picAsked = {};
 /* Cache Storage keeps the actual image BYTES on the device, so a photo is
    only ever downloaded from Google once. Quota is tens of MB (localStorage
    would be far too small). Falls back to a plain <img> if unavailable. */
+var BUILD = '2026-08-13d';
 var IMGCACHE = 'wool-img-v1';
 var canCache = (typeof caches !== 'undefined');
 
@@ -956,6 +969,7 @@ try {
   }
 } catch (e) {}
 
+photoStatus();                 /* paint the banner before anything else happens */
 setTimeout(photosPass, 60);
 setTimeout(photosPass, 800);
 
@@ -977,35 +991,78 @@ function keyPrompt(){
   photosPass();
 }
 
+function explainG(status, body){
+  var b = (body || '').slice(0, 300);
+  if (status === 403 && /referer|referrer|API_KEY_HTTP_REFERRER/i.test(b))
+    return 'Your key is locked to a different website. Add <b>' + location.origin + '/*</b> to the key\'s Website restrictions.';
+  if (status === 403 && /not enabled|SERVICE_DISABLED|disabled/i.test(b))
+    return 'The <b>Places API</b> is not switched on for this key. Enable it in the Maps API Library.';
+  if (status === 403) return 'Key rejected — usually the Places API is off, or the website restriction excludes this address.';
+  if (status === 429 || /RESOURCE_EXHAUSTED|quota/i.test(b))
+    return 'Daily quota reached. That is your spending cap working — it resets tomorrow.';
+  if (status === 400) return 'Request refused — the key may be mistyped or have a stray space.';
+  return 'Unexpected response (' + status + ').';
+}
+
+function testKey(){
+  var out = document.getElementById('ptest');
+  if (!out) return;
+  if (!GON) { out.innerHTML = '<b>No key installed.</b> Tap “Add key” first.'; return; }
+  out.innerHTML = 'Testing…';
+  fetch('https://places.googleapis.com/v1/places:searchText', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'X-Goog-Api-Key': GKEY,
+      'X-Goog-FieldMask': 'places.photos,places.displayName'
+    },
+    body: JSON.stringify({ textQuery: 'Exmoor Zoo, North Devon, UK', maxResultCount: 1 })
+  }).then(function(r){
+    return r.text().then(function(t){ return { ok: r.ok, status: r.status, t: t }; });
+  }).then(function(r){
+    if (!r.ok) { out.innerHTML = '<b>❌ Failed (' + r.status + ')</b><br>' + explainG(r.status, r.t); return; }
+    var j = JSON.parse(r.t);
+    var p = j.places && j.places[0];
+    var n = (p && p.photos) ? p.photos.length : 0;
+    out.innerHTML = '<b>✅ Working.</b> Found “' + (p ? p.displayName.text : '?') + '” with ' + n +
+      ' photo' + (n === 1 ? '' : 's') + '. Scroll and they will fill in.';
+  }).catch(function(){
+    out.innerHTML = '<b>❌ Could not reach Google.</b> No signal, or the request was blocked.';
+  });
+}
+
 function photoStatus(){
   try{
-    var pane = document.querySelector('.pane.on') || document.getElementById('p-near');
-    if (!pane) return;
-    var old = document.getElementById('photostat');
-    if (old && old.parentNode !== pane) { old.remove(); old = null; }
+    var box = document.getElementById('photostat');
+    if (!box) return;
+    var txt = document.getElementById('pstxt');
+    var keyb = document.getElementById('pkeybtn');
+    var testb = document.getElementById('ptestbtn');
+    var bld = document.getElementById('pbuild');
 
     var got = 0, tried = 0;
     for (var k in GPIC) { tried++; if (GPIC[k]) got++; }
 
-    /* once photos are in and nothing is pending, take the banner away */
-    if (GON && got > 0 && !picQueue.length) { if (old) old.remove(); return; }
-
-    if (!old) {
-      old = document.createElement('div');
-      old.id = 'photostat';
-      pane.insertBefore(old, pane.firstChild);
+    if (GON) {
+      box.className = 'pstat';
+      if (txt) txt.innerHTML = 'On · key ' + GKEY.slice(0,6) + '…' + GKEY.slice(-4)
+        + '<br>' + got + ' of ' + tried + ' places looked up'
+        + (picQueue.length ? ' · ' + picQueue.length + ' loading' : '');
+      if (keyb) keyb.textContent = 'Change key';
+      if (testb) testb.style.display = '';
+    } else {
+      box.className = 'pstat nokey';
+      if (txt) txt.textContent = 'Off — add a Google Maps key and every activity gets real photographs instead of the drawn artwork.';
+      if (keyb) keyb.textContent = 'Add key';
+      if (testb) testb.style.display = 'none';
     }
-    old.className = 'pstat' + (GON ? '' : ' nokey');
-    old.innerHTML = GON
-      ? '<b>📷 Loading photos…</b> ' + got + ' of ' + tried + ' found'
-        + (picQueue.length ? ' · ' + picQueue.length + ' to go' : '')
-      : '<b>📷 Photos are off</b><br>Add a Google Maps key and every activity gets real photographs instead of the drawn artwork.'
-        + '<button class="pbtn" id="pkeybtn">Add key</button>';
-    var b = document.getElementById('pkeybtn');
-    if (b) b.onclick = keyPrompt;
+    if (bld) bld.textContent = 'build ' + BUILD + ' · this page: ' + location.origin + '/*';
+    if (keyb) keyb.onclick = keyPrompt;
+    if (testb) testb.onclick = testKey;
   }catch(e){}
 }
 
+photoStatus();                 /* paint the banner before anything else happens */
 setTimeout(photosPass, 60);
 setTimeout(photosPass, 800);
 
