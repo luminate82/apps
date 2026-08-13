@@ -273,14 +273,12 @@ function saveKey(k){
 }
 function promptKey(){
   const cur=GMAPS_KEY?GMAPS_KEY.slice(0,8)+'…':'';
-  const v=prompt(
-    "Paste your Google Maps API key.\n\n"+
-    "It's saved in this browser only — never in the file, never in your GitHub repo.\n"+
-    "Leave blank and press OK to remove it.", cur.includes('…')?'':GMAPS_KEY);
-  if(v===null) return;
-  saveKey(v);
-  alert(v.trim()? "Key saved on this device.\n\nUpdating the app will no longer wipe it."
-                : "Key removed. The app is back on its built-in estimates.");
+  askText("Paste your Google Maps API key.\n\nSaved in this browser only — never in the file or your GitHub repo.\nLeave blank to remove it.",
+    cur.includes('…')?'':GMAPS_KEY, function(v){
+      if(v===null) return;
+      saveKey(v);
+      alert(v.trim()? "Key saved on this device." : "Key removed — back to the built-in estimates.");
+    });
 }
 
 /* ---------- route: South Woodford -> M11 -> M25 -> M4 -> M5 -> A361 -> Woolacombe ---------- */
@@ -1161,9 +1159,7 @@ function resetTrip(){
 /* Type any place name — matches the 160 places in the app, and falls back to
    your current position if you're staying somewhere I've never heard of. */
 function setTonightByName(){
-  const q=prompt(
-    "Where are you stopping tonight?\n\n"+
-    "Type a hotel or town — or leave it blank to use where you are right now.","");
+  askText("Where are you stopping tonight?\n\nType a hotel or town — or leave blank to use where you are now.","",function(q){
   if(q===null) return;
   const t=q.trim();
   if(!t){
@@ -1186,8 +1182,8 @@ function setTonightByName(){
     return;
   }
   alert('Couldn\'t find "'+t+'" and location is off.\n\n'+
-        "Either turn location on once you're there, or open the Stay tab and tap "+
-        "🛏 Stop here on a hotel.");
+        "Either turn location on once you're there, or open a hotel and tap 🛏 Stop here.");
+  });
 }
 
 function tonightCard(){
@@ -1213,10 +1209,11 @@ function toggleVisited(id){
 function addNote(id){
   const p=P[id],k=key(p);
   const cur=STATE.notes[k]||'';
-  const v=prompt('Your note on '+p.n+'\n(e.g. "kids loved it", "closed when we arrived", "park round the back")',cur);
-  if(v===null)return;
-  if(v.trim()) STATE.notes[k]=v.trim(); else delete STATE.notes[k];
-  saveState(); render();
+  askText('Your note on '+p.n+'\n(e.g. "kids loved it", "closed when we arrived")',cur,function(v){
+    if(v===null)return;
+    if(v.trim()) STATE.notes[k]=v.trim(); else delete STATE.notes[k];
+    saveState(); render();
+  });
 }
 
 /* ---------- the journey chart ---------- */
@@ -1412,6 +1409,35 @@ function setMe(lat,lng,acc,speedMps,ts){
     lastRt=now; lastRmi=km;
     render();
   }
+}
+
+
+/* iOS blocks prompt() in Home Screen web apps, so route every text prompt
+   through a real in-page dialog instead. Same call signature. */
+function askText(label, preset, cb){
+  var wrap=document.createElement('div');
+  wrap.style.cssText='position:fixed;inset:0;z-index:9999;background:rgba(20,20,25,.45);'
+    +'display:flex;align-items:center;justify-content:center;padding:20px';
+  var box=document.createElement('div');
+  box.style.cssText='background:#fff;border-radius:18px;padding:18px;width:100%;max-width:420px;'
+    +'box-shadow:0 12px 40px rgba(0,0,0,.3);font:15px -apple-system,sans-serif;color:#20242c';
+  box.innerHTML='<div style="font-weight:700;margin-bottom:10px;white-space:pre-wrap">'
+    +String(label).replace(/</g,'&lt;')+'</div>'
+    +'<input id="__askin" type="text" autocapitalize="off" autocorrect="off" spellcheck="false" '
+    +'style="width:100%;padding:11px 12px;border:1px solid #e5e0d5;border-radius:10px;'
+    +'font:15px -apple-system,sans-serif;-webkit-appearance:none">'
+    +'<div style="display:flex;gap:8px;margin-top:12px">'
+    +'<button id="__askok" style="flex:1;background:#0077b6;color:#fff;border:0;border-radius:10px;padding:11px;font:700 15px -apple-system,sans-serif">OK</button>'
+    +'<button id="__askno" style="flex:1;background:#f0ece3;color:#20242c;border:0;border-radius:10px;padding:11px;font:700 15px -apple-system,sans-serif">Cancel</button>'
+    +'</div>';
+  wrap.appendChild(box); document.body.appendChild(wrap);
+  var inp=box.querySelector('#__askin'); inp.value=preset||'';
+  try{ inp.focus(); }catch(e){}
+  function done(v){ wrap.remove(); cb(v); }
+  box.querySelector('#__askok').onclick=function(){ done(inp.value); };
+  box.querySelector('#__askno').onclick=function(){ done(null); };
+  wrap.onclick=function(e){ if(e.target===wrap) done(null); };
+  inp.onkeydown=function(e){ if(e.key==='Enter') done(inp.value); };
 }
 
 /* ---------- cards ---------- */

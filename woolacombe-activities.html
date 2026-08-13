@@ -141,6 +141,17 @@ nav svg{width:25px;height:25px;display:block}
     <button class="pbtn" id="pkeybtn">Add key</button>
     <button class="pbtn" id="ptestbtn" style="background:#f0ece3;color:#20242c;display:none">Test key</button>
   </div>
+  <div id="pkeyrow" style="display:none;margin-top:10px">
+    <input id="pkeyin" type="text" inputmode="text" autocapitalize="off" autocorrect="off"
+           spellcheck="false" placeholder="Paste your Google Maps key"
+           style="width:100%;padding:11px 12px;border:1px solid var(--sep);border-radius:10px;
+                  font:15px -apple-system,sans-serif;background:#fff;color:var(--label);-webkit-appearance:none">
+    <div style="display:flex;gap:8px;margin-top:8px">
+      <button class="pbtn" id="pkeysave">Save</button>
+      <button class="pbtn" id="pkeyclear" style="background:#f0ece3;color:#20242c">Remove key</button>
+      <button class="pbtn" id="pkeycancel" style="background:#f0ece3;color:#20242c">Cancel</button>
+    </div>
+  </div>
   <div id="ptest" style="margin-top:8px;font-size:12.5px;line-height:1.45"></div>
   <div id="pbuild" style="margin-top:8px;font-size:10px;opacity:.65"></div>
 </div>
@@ -792,7 +803,7 @@ var picQueue = [], picBusy = false, picAsked = {};
 /* Cache Storage keeps the actual image BYTES on the device, so a photo is
    only ever downloaded from Google once. Quota is tens of MB (localStorage
    would be far too small). Falls back to a plain <img> if unavailable. */
-var BUILD = '2026-08-13d';
+var BUILD = '2026-08-13e';
 var IMGCACHE = 'wool-img-v1';
 var canCache = (typeof caches !== 'undefined');
 
@@ -974,20 +985,26 @@ setTimeout(photosPass, 800);
 
 /* Photo status — a proper banner at the top of the visible pane, not a
    floating pill. Includes key entry so there's no need to switch apps. */
-function keyPrompt(){
-  var v = prompt(
-    "Paste your Google Maps API key to switch photos on.\n\n" +
-    "Saved in this browser only — never in the file or your GitHub repo.\n" +
-    "Leave blank and press OK to remove it.", GKEY || "");
-  if (v === null) return;
-  v = v.trim();
+function applyKey(v){
+  v = (v || '').trim();
   try { v ? localStorage.setItem('gmaps-key-v1', v) : localStorage.removeItem('gmaps-key-v1'); } catch(e){}
   GKEY = v; GON = !!v && v.length > 20;
   GPIC = {}; picAsked = {}; picQueue = [];
   try { localStorage.removeItem('wool-photos-v1'); } catch(e){}
-  alert(v ? "Key saved. Photos will start appearing as you scroll."
-          : "Key removed — back to the drawn artwork.");
+  var row = document.getElementById('pkeyrow'); if (row) row.style.display = 'none';
+  var t = document.getElementById('ptest');
+  if (t) t.innerHTML = v ? '<b>Key saved.</b> Photos will appear as you scroll.'
+                         : '<b>Key removed.</b> Back to the drawn artwork.';
   photosPass();
+}
+function keyPrompt(){
+  /* No prompt() — iOS blocks it in Home Screen web apps. Inline field instead. */
+  var row = document.getElementById('pkeyrow');
+  var inp = document.getElementById('pkeyin');
+  if (!row || !inp) return;
+  var showing = row.style.display !== 'none';
+  row.style.display = showing ? 'none' : 'block';
+  if (!showing) { inp.value = GKEY || ''; try { inp.focus(); } catch(e){} }
 }
 
 function explainG(status, body){
@@ -1058,6 +1075,12 @@ function photoStatus(){
     if (bld) bld.textContent = 'build ' + BUILD + ' · this page: ' + location.origin + '/*';
     if (keyb) keyb.onclick = keyPrompt;
     if (testb) testb.onclick = testKey;
+    var sv = document.getElementById('pkeysave');
+    var cl = document.getElementById('pkeyclear');
+    var cn = document.getElementById('pkeycancel');
+    if (sv) sv.onclick = function(){ applyKey((document.getElementById('pkeyin')||{}).value); };
+    if (cl) cl.onclick = function(){ applyKey(''); };
+    if (cn) cn.onclick = function(){ var r=document.getElementById('pkeyrow'); if(r) r.style.display='none'; };
   }catch(e){}
 }
 
