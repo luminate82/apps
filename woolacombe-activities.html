@@ -1,0 +1,743 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=5">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="theme-color" content="#dff0f7">
+<title>Around Woolacombe</title>
+<style>
+:root{
+  --bg:#f7f4ee; --card:#ffffff; --card2:#f0ece3; --sep:#e5e0d5;
+  --label:#20242c; --sec:#6f6a5e; --ter:#a39d8f;
+  --blue:#0077b6; --green:#178a45; --orange:#e07b1f; --red:#c0392b;
+  --yellow:#b45309; --purple:#7c3aed; --teal:#0891b2; --pink:#d6336c;
+  --tab:78px;
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{background:linear-gradient(180deg,#dff0f7 0%,#f2efe7 130px,var(--bg) 260px);margin:0;padding:0;background:var(--bg);color:var(--label);
+  font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text","Helvetica Neue",sans-serif;
+  -webkit-font-smoothing:antialiased;overscroll-behavior-y:none}
+body{padding-bottom:calc(var(--tab) + env(safe-area-inset-bottom))}
+
+header{padding:calc(env(safe-area-inset-top) + 14px) 20px 8px;
+  padding-left:calc(20px + env(safe-area-inset-left));
+  padding-right:calc(20px + env(safe-area-inset-right))}
+h1{font-size:33px;line-height:1.1;font-weight:700;letter-spacing:-.6px;margin:0}
+.sub{color:var(--sec);font-size:14px;margin-top:5px;line-height:1.35}
+
+main{padding:4px calc(16px + env(safe-area-inset-left)) 28px calc(16px + env(safe-area-inset-right))}
+.pane{display:none}.pane.on{display:block}
+
+/* status card */
+.status{background:var(--card);border-radius:18px;padding:16px;margin:10px 0 14px}
+.statrow{display:flex;gap:10px}
+.stat{flex:1;background:var(--card2);border-radius:13px;padding:11px 8px;text-align:center}
+.stat b{display:block;font-size:21px;font-weight:700;letter-spacing:-.4px}
+.stat span{display:block;font-size:10.5px;color:var(--sec);margin-top:3px;letter-spacing:.2px}
+
+/* chips */
+.chips{display:flex;gap:8px;overflow-x:auto;padding:4px 0 12px;scrollbar-width:none}
+.chips::-webkit-scrollbar{display:none}
+.chip{flex:0 0 auto;background:var(--card);color:var(--sec);border:0;border-radius:100px;
+  padding:8px 14px;font-size:13.5px;font-weight:600;font-family:inherit;transition:.15s}
+.chip:active{transform:scale(.96)}
+.chip.on{background:var(--blue);color:#fff}
+
+/* cards */
+.card{background:var(--card);border-radius:18px;overflow:hidden;margin-bottom:14px}
+.art{display:block;width:100%;height:auto;background:#0d1b26;position:relative}
+.art svg{display:block;width:100%;height:auto}
+.art img.photo{position:absolute;left:0;top:0;width:100%;height:100%;object-fit:cover;z-index:2;display:block}
+.credit{position:absolute;right:7px;bottom:6px;z-index:3;font-size:9.5px;color:rgba(255,255,255,.82);
+  background:rgba(0,0,0,.45);padding:2px 6px;border-radius:6px;letter-spacing:.2px}
+.body{padding:14px 15px 15px}
+.ttl{font-size:17.5px;font-weight:700;letter-spacing:-.3px;line-height:1.25}
+.tags{display:flex;flex-wrap:wrap;gap:6px;margin:9px 0 11px}
+.tag{font-size:11px;font-weight:600;padding:4px 9px;border-radius:100px;
+  background:var(--card2);color:var(--sec);letter-spacing:.1px;white-space:nowrap}
+.tag.d{background:rgba(10,132,255,.16);color:#6ab4ff}
+.tag.calm{background:rgba(48,209,88,.16);color:#178a45}
+.tag.loud{background:rgba(255,159,10,.16);color:#b45309}
+.tag.in{background:rgba(191,90,240,.16);color:#7c3aed}
+.tag.chk{background:rgba(255,69,58,.16);color:#c0392b}
+
+.kid{display:flex;gap:9px;margin-top:9px;align-items:flex-start}
+.pill{flex:0 0 auto;width:44px;text-align:center;font-size:10.5px;font-weight:700;
+  padding:3px 0;border-radius:7px;margin-top:1px;letter-spacing:.2px}
+.pill.t{background:rgba(64,200,224,.18);color:#0891b2}
+.pill.j{background:rgba(255,55,95,.18);color:#d6336c}
+.kid p{margin:0;font-size:14px;line-height:1.42;color:#6f6a5e}
+
+.note{margin-top:11px;padding-top:11px;border-top:1px solid var(--sep);
+  font-size:13px;line-height:1.42;color:var(--sec)}
+.acts{display:flex;gap:8px;margin-top:12px}
+.btn{flex:1;text-align:center;text-decoration:none;background:var(--card2);color:var(--blue);
+  font-size:14px;font-weight:600;padding:10px;border-radius:12px;transition:.15s;display:block}
+.btn:active{transform:scale(.96)}
+
+.empty{text-align:center;color:var(--ter);font-size:14px;padding:40px 20px}
+h2.sec{font-size:13px;font-weight:700;color:var(--sec);letter-spacing:.5px;
+  text-transform:uppercase;margin:20px 4px 10px}
+
+/* week */
+.day{background:var(--card);border-radius:18px;padding:15px;margin-bottom:11px}
+.dhead{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:4px}
+.dhead b{font-size:16.5px;font-weight:700;letter-spacing:-.2px}
+.dhead span{font-size:12.5px;color:var(--ter);font-weight:600}
+.dbook{margin-top:9px;background:var(--card2);border-radius:12px;padding:10px 12px;
+  font-size:14px;font-weight:600;display:flex;gap:9px;align-items:center}
+.dot{width:8px;height:8px;border-radius:50%;flex:0 0 auto}
+.dsug{margin-top:9px;font-size:13.5px;color:var(--sec);line-height:1.45}
+.dsug b{color:#6f6a5e;font-weight:600}
+
+/* tab bar */
+nav{position:fixed;left:0;right:0;bottom:0;z-index:50;
+  background:rgba(20,20,22,.86);-webkit-backdrop-filter:blur(22px);backdrop-filter:blur(22px);
+  border-top:.5px solid var(--sep);display:flex;
+  padding:8px calc(6px + env(safe-area-inset-left)) calc(6px + env(safe-area-inset-bottom)) calc(6px + env(safe-area-inset-right))}
+nav button{flex:1;background:none;border:0;color:var(--ter);font-family:inherit;
+  font-size:10.5px;font-weight:600;letter-spacing:.1px;padding:4px 2px;
+  display:flex;flex-direction:column;align-items:center;gap:3px;transition:.15s}
+nav button:active{transform:scale(.92)}
+nav button.on{color:var(--blue)}
+nav svg{width:25px;height:25px;display:block}
+
+#err{display:none;padding:20px;font:12px/1.5 ui-monospace,monospace;color:#c0392b;
+  white-space:pre-wrap;word-break:break-word}
+</style>
+</head>
+<body>
+
+<div id="err"></div>
+<header><h1 id="ttl">Near the park</h1><div class="sub" id="sb">Loading…</div></header>
+<main>
+  <div class="pane on" id="p-near"></div>
+  <div class="pane" id="p-rain"></div>
+  <div class="pane" id="p-big"></div>
+  <div class="pane" id="p-week"></div>
+</main>
+
+<nav id="nav"></nav>
+
+<script>
+(function(){
+"use strict";
+
+window.onerror=function(m,s,l){
+  try{
+    var e=document.getElementById('err');
+    var main=document.getElementById('p-near');
+    if(e&&(!main||main.innerHTML.length<50)){
+      e.style.display='block';
+      e.textContent='Error: '+m+'\nline '+l;
+    }
+  }catch(x){}
+};
+
+/* ---------------- illustrations: flat vector scenes, no network ---------------- */
+var P={sky1:'#0b2233',sky2:'#123a52',sun:'#b45309',sea:'#0e5a78',sea2:'#0a4359',
+        sand:'#8a5a3a',sand2:'#a98a52',hill:'#1d4d3f',hill2:'#143a2f',rock:'#e5e0d5',
+        dark:'#0a1620',white:'#20242c',warm:'#e8763a',pink:'#d6336c',green:'#3f8f56'};
+
+function base(o){
+  o=o||{};
+  var skyA=o.skyA||P.sky1, skyB=o.skyB||P.sky2;
+  var s='<svg viewBox="0 0 400 190" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMid slice">';
+  s+='<rect width="400" height="190" fill="'+skyA+'"/>';
+  s+='<rect y="0" width="400" height="96" fill="'+skyB+'" opacity=".55"/>';
+  if(o.sun!==false) s+='<circle cx="'+(o.sx||326)+'" cy="'+(o.sy||42)+'" r="'+(o.sr||19)+'" fill="'+(o.sc||P.sun)+'" opacity=".9"/>';
+  return s;
+}
+function hills(a,b){
+  return '<path d="M0 108 L58 78 L112 100 L168 68 L232 104 L292 80 L344 102 L400 84 L400 190 L0 190Z" fill="'+(a||P.hill2)+'"/>'
+       + '<path d="M0 126 L64 106 L128 124 L196 100 L264 126 L330 108 L400 124 L400 190 L0 190Z" fill="'+(b||P.hill)+'"/>';
+}
+function seaband(y){
+  y=y||118;
+  var s='<rect y="'+y+'" width="400" height="'+(190-y)+'" fill="'+P.sea+'"/>';
+  s+='<path d="M0 '+(y+16)+' q26 -7 52 0 t52 0 t52 0 t52 0 t52 0 t52 0 t52 0" stroke="'+P.sea2+'" stroke-width="4" fill="none" opacity=".8"/>';
+  s+='<path d="M0 '+(y+34)+' q30 -8 60 0 t60 0 t60 0 t60 0 t60 0 t60 0" stroke="'+P.sea2+'" stroke-width="4" fill="none" opacity=".6"/>';
+  return s;
+}
+function beachband(y){
+  y=y||150;
+  return '<path d="M0 '+y+' q100 -12 200 0 t200 0 L400 190 L0 190Z" fill="'+P.sand+'"/>'
+       + '<path d="M0 '+(y+18)+' q100 -10 200 0 t200 0 L400 190 L0 190Z" fill="'+P.sand2+'" opacity=".55"/>';
+}
+function end(){return '</svg>';}
+
+var M={};
+M.arcade=function(){return base({skyA:'#1a1030',skyB:'#2b1550',sun:false})
+  +'<rect y="120" width="400" height="70" fill="#1b1236"/>'
+  +'<rect x="70" y="52" width="260" height="98" rx="12" fill="#f0ece3"/>'
+  +'<rect x="86" y="68" width="228" height="52" rx="7" fill="'+P.sky1+'"/>'
+  +'<circle cx="122" cy="94" r="9" fill="'+P.warm+'"/><circle cx="158" cy="94" r="9" fill="'+P.sun+'"/><circle cx="194" cy="94" r="9" fill="#0891b2"/><circle cx="230" cy="94" r="9" fill="'+P.pink+'"/><circle cx="266" cy="94" r="9" fill="#178a45"/>'
+  +'<rect x="118" y="128" width="164" height="12" rx="6" fill="#e5e0d5"/>'
+  +'<circle cx="90" cy="44" r="4" fill="'+P.sun+'"/><circle cx="312" cy="40" r="4" fill="'+P.pink+'"/><circle cx="200" cy="32" r="4" fill="#0891b2"/>'+end();};
+M.golf=function(){return base()+hills()
+  +'<path d="M0 132 q200 -22 400 0 L400 190 L0 190Z" fill="#2f7a4a"/>'
+  +'<ellipse cx="252" cy="164" rx="17" ry="7" fill="#123a24"/>'
+  +'<rect x="250" y="118" width="4" height="46" fill="'+P.white+'"/>'
+  +'<path d="M254 118 l32 11 l-32 11z" fill="'+P.warm+'"/>'
+  +'<circle cx="116" cy="162" r="8" fill="'+P.white+'"/>'
+  +'<path d="M96 168 q20 -30 132 -6" stroke="'+P.white+'" stroke-width="2" fill="none" stroke-dasharray="5 6" opacity=".6"/>'+end();};
+M.horse=function(){return base({skyA:'#1c2438',skyB:'#3a4a63',sc:'#b45309'})+seaband(116)+beachband(140)
+  +'<g fill="#8a5a3a">'
+  +'<rect x="148" y="150" width="9" height="30" rx="4"/><rect x="168" y="152" width="9" height="28" rx="4"/>'
+  +'<rect x="206" y="150" width="9" height="30" rx="4"/><rect x="224" y="152" width="9" height="28" rx="4"/>'
+  +'<ellipse cx="190" cy="144" rx="46" ry="21"/>'
+  +'<path d="M222 138 q10 -12 16 -30 l6 -18 l16 6 l-8 22 q-6 20 -20 26z"/>'
+  +'<path d="M252 90 q16 -2 20 10 l-8 14 l-22 -8z"/>'
+  +'</g>'
+  +'<path d="M144 138 q-16 6 -20 30 q12 -14 24 -20z" fill="#5c3a24"/>'
+  +'<path d="M240 96 q10 -22 22 -26 q-4 16 -8 30z" fill="#5c3a24"/>'
+  +'<path d="M256 84 l-2 -12 l8 7z" fill="#8a5a3a"/><path d="M266 86 l3 -12 l6 9z" fill="#8a5a3a"/>'
+  +'<circle cx="264" cy="98" r="2.6" fill="#ffffff"/>'
+  +'<g><circle cx="196" cy="106" r="9" fill="#8a5a3a"/><path d="M188 116 l16 0 l7 26 l-30 0z" fill="'+P.warm+'"/></g>'+end();};
+M.surf=function(){return base({skyA:'#0d2b3a',skyB:'#17506b'})
+  +'<rect y="96" width="400" height="94" fill="'+P.sea+'"/>'
+  +'<path d="M0 132 q56 -46 118 -10 q46 26 96 0 q56 -30 108 4 q40 20 78 -6 L400 190 L0 190Z" fill="'+P.sea2+'"/>'
+  +'<path d="M0 154 q70 -22 140 2 q70 24 140 -2 q60 -22 120 2 L400 190 L0 190Z" fill="#083a4e"/>'
+  +'<g fill="#20242c"><ellipse cx="196" cy="112" rx="9" ry="30" transform="rotate(-26 196 112)"/></g>'
+  +'<g fill="#ffffff"><circle cx="186" cy="92" r="7"/><path d="M180 100 l14 0 l6 22 l-26 0z"/></g>'
+  +'<path d="M0 176 q40 -9 80 0 t80 0 t80 0 t80 0 t80 0" stroke="'+P.white+'" stroke-width="3" fill="none" opacity=".55"/>'+end();};
+M.aquarium=function(){return base({skyA:'#e6f2f7',skyB:'#073349',sun:false})
+  +'<rect y="0" width="400" height="190" fill="#062e42"/>'
+  +'<g opacity=".5"><path d="M40 190 q10 -60 -4 -100" stroke="#0f6f7a" stroke-width="9" fill="none"/><path d="M64 190 q-8 -50 6 -84" stroke="#0f6f7a" stroke-width="7" fill="none"/><path d="M348 190 q12 -56 -2 -92" stroke="#0f6f7a" stroke-width="9" fill="none"/></g>'
+  +'<g fill="'+P.warm+'"><path d="M150 92 q22 -16 44 0 q-22 16 -44 0z"/><path d="M150 92 l-14 -11 l0 22z"/></g>'
+  +'<circle cx="182" cy="88" r="2.4" fill="#e6f2f7"/>'
+  +'<g fill="'+P.sun+'"><path d="M226 124 q16 -11 32 0 q-16 11 -32 0z"/><path d="M226 124 l-10 -8 l0 16z"/></g>'
+  +'<g fill="'+P.pink+'"><path d="M108 148 q14 -10 28 0 q-14 10 -28 0z"/><path d="M108 148 l-9 -7 l0 14z"/></g>'
+  +'<g fill="#7fe3f0" opacity=".7"><circle cx="272" cy="60" r="4"/><circle cx="284" cy="40" r="3"/><circle cx="276" cy="24" r="2"/></g>'+end();};
+M.boat=function(){return base({skyA:'#182a44',skyB:'#2e4a6b',sc:'#b45309'})+seaband(120)
+  +'<path d="M124 148 l152 0 l-20 22 l-112 0z" fill="#d8d3c6"/>'
+  +'<rect x="196" y="86" width="5" height="62" fill="#8d8676"/>'
+  +'<path d="M201 90 l44 52 l-44 0z" fill="'+P.white+'"/>'
+  +'<path d="M196 96 l-34 46 l34 0z" fill="'+P.warm+'"/>'
+  +'<path d="M0 176 q40 -9 80 0 t80 0 t80 0 t80 0 t80 0" stroke="'+P.sea2+'" stroke-width="4" fill="none"/>'+end();};
+M.castle=function(){return base({skyA:'#191a2e',skyB:'#2d2b4c'})+hills('#242a1e','#1a1f16')
+  +'<g fill="#b9b2a2">'
+  +'<rect x="120" y="82" width="160" height="80"/>'
+  +'<rect x="96" y="60" width="40" height="102"/><rect x="264" y="60" width="40" height="102"/>'
+  +'<path d="M96 60 h40 v-10 h-8 v6 h-8 v-6 h-8 v6 h-8v-6h-8z"/>'
+  +'<path d="M264 60 h40 v-10 h-8 v6 h-8 v-6 h-8 v6 h-8v-6h-8z"/>'
+  +'</g>'
+  +'<g fill="#7b7466"><rect x="140" y="98" width="16" height="24" rx="8"/><rect x="192" y="98" width="16" height="24" rx="8"/><rect x="244" y="98" width="16" height="24" rx="8"/></g>'
+  +'<path d="M182 162 l0 -32 q18 -18 36 0 l0 32z" fill="#4a3a2a"/>'
+  +'<rect x="108" y="34" width="3" height="28" fill="#b9b2a2"/><path d="M111 34 l22 7 l-22 7z" fill="'+P.pink+'"/>'
+  +'<rect y="162" width="400" height="28" fill="#242a1e"/>'+end();};
+M.dino=function(){return base({skyA:'#22301c',skyB:'#39492c',sc:'#b45309'})+hills('#1d2a18','#16210f')
+  +'<g fill="#2f6b46">'
+  +'<path d="M78 168 q10 -54 62 -60 q40 -5 62 20 q18 20 46 20 l0 20z"/>'
+  +'<path d="M186 128 q26 -46 62 -40 q26 5 22 30 q-3 20 -26 22 z"/>'
+  +'<path d="M240 118 q26 -6 40 6 q-14 12 -40 6z"/>'
+  +'<path d="M78 168 q-34 -8 -56 -34 q26 8 52 12z"/>'
+  +'</g>'
+  +'<g fill="#1e4a30"><path d="M120 112 l10 -18 l10 18z"/><path d="M146 104 l10 -18 l10 18z"/><path d="M172 104 l10 -18 l10 18z"/></g>'
+  +'<circle cx="260" cy="108" r="3.2" fill="#b45309"/>'
+  +'<rect y="168" width="400" height="22" fill="#1d2a18"/>'+end();};
+M.zoo=function(){return base({skyA:'#1d2a35',skyB:'#2f4756',sc:'#b45309'})+hills('#233326','#1a281d')
+  +'<g fill="'+P.sun+'"><path d="M156 172 l0 -46 q0 -22 22 -22 q22 0 22 22 l0 46 l-11 0 l0 -34 l-22 0 l0 34z"/>'
+  +'<path d="M188 108 q6 -34 22 -44 l10 8 q-12 12 -16 38z"/></g>'
+  +'<g fill="#8a6a2a"><circle cx="164" cy="140" r="6"/><circle cx="180" cy="156" r="5"/><circle cx="192" cy="132" r="5"/><circle cx="214" cy="76" r="4"/></g>'
+  +'<path d="M216 68 l-3 -12 l8 6z" fill="'+P.sun+'"/><circle cx="222" cy="72" r="2.4" fill="#ffffff"/>'
+  +'<g fill="#2f6b46"><circle cx="70" cy="122" r="30"/><rect x="66" y="122" width="8" height="50"/><circle cx="330" cy="132" r="24"/><rect x="326" y="132" width="8" height="40"/></g>'
+  +'<rect y="170" width="400" height="20" fill="#233326"/>'+end();};
+M.softplay=function(){return base({skyA:'#241338',skyB:'#3a1c5c',sun:false})
+  +'<rect y="0" width="400" height="190" fill="#251442"/>'
+  +'<g><circle cx="70" cy="150" r="20" fill="'+P.warm+'"/><circle cx="118" cy="164" r="16" fill="'+P.sun+'"/><circle cx="160" cy="146" r="18" fill="#0891b2"/><circle cx="206" cy="166" r="15" fill="'+P.pink+'"/><circle cx="248" cy="148" r="19" fill="#178a45"/><circle cx="296" cy="164" r="16" fill="#7c3aed"/><circle cx="340" cy="148" r="18" fill="'+P.warm+'"/></g>'
+  +'<path d="M120 118 l90 0 l0 -46 l-90 0z" fill="#f0ece3"/>'
+  +'<path d="M210 72 l70 46 l-70 0z" fill="'+P.sun+'"/>'
+  +'<rect x="120" y="60" width="90" height="14" rx="7" fill="'+P.pink+'"/>'+end();};
+M.farm=function(){return base({skyA:'#1e2a34',skyB:'#39566b',sc:'#b45309'})+hills('#264a2e','#1c3a23')
+  +'<rect y="150" width="400" height="40" fill="#2f7a4a"/>'
+  +'<path d="M240 150 l0 -46 l70 0 l0 46z" fill="#8a3a2a"/><path d="M232 104 l43 -26 l43 26z" fill="#6a2a1e"/>'
+  +'<g fill="'+P.white+'"><ellipse cx="112" cy="152" rx="30" ry="20"/><circle cx="146" cy="140" r="13"/></g>'
+  +'<g fill="#f0ece3"><circle cx="151" cy="139" r="9"/><rect x="98" y="168" width="6" height="14"/><rect x="118" y="168" width="6" height="14"/></g>'
+  +'<circle cx="154" cy="137" r="2" fill="'+P.white+'"/>'+end();};
+M.bee=function(){return base({skyA:'#2a2410',skyB:'#4a4018',sc:'#b45309'})+hills('#2a4a24','#1e3a1a')
+  +'<path d="M0 140 q200 -20 400 0 L400 190 L0 190Z" fill="#3f8f56"/>'
+  +'<g fill="'+P.sun+'"><ellipse cx="200" cy="96" rx="34" ry="24"/></g>'
+  +'<g fill="#2c2416"><rect x="188" y="74" width="9" height="45" rx="4"/><rect x="210" y="76" width="9" height="41" rx="4"/><circle cx="238" cy="92" r="13"/></g>'
+  +'<circle cx="243" cy="88" r="2.6" fill="'+P.white+'"/>'
+  +'<g fill="'+P.white+'" opacity=".55"><ellipse cx="186" cy="66" rx="22" ry="11" transform="rotate(-22 186 66)"/><ellipse cx="214" cy="64" rx="20" ry="10" transform="rotate(18 214 64)"/></g>'
+  +'<g fill="'+P.sun+'"><circle cx="70" cy="150" r="7"/><circle cx="330" cy="146" r="7"/></g>'+end();};
+M.coaster=function(){return base({skyA:'#1a1330',skyB:'#33205a',sc:'#e07b1f'})
+  +'<rect y="152" width="400" height="38" fill="#1e1836"/>'
+  +'<path d="M0 150 q40 -104 96 -100 q54 4 66 74 q10 58 62 58 q54 0 66 -66 q10 -54 62 -46 q34 5 48 46" stroke="#20242c" stroke-width="6" fill="none" stroke-linecap="round"/>'
+  +'<g stroke="#4a4468" stroke-width="4"><path d="M96 52 v100 M162 124 v28 M224 182 v-30 M290 118 v34 M352 116 v36"/></g>'
+  +'<g fill="'+P.warm+'"><rect x="118" y="58" width="30" height="18" rx="6" transform="rotate(46 133 67)"/></g>'
+  +'<circle cx="128" cy="62" r="4" fill="#ffffff"/>'+end();};
+M.railway=function(){return base({skyA:'#182436',skyB:'#2c4360'})+seaband(140)
+  +'<path d="M0 190 L0 52 L70 26 L210 190Z" fill="'+P.hill2+'"/>'
+  +'<path d="M0 190 L0 92 L58 70 L186 190Z" fill="'+P.hill+'"/>'
+  +'<g stroke="#6f6a5e" stroke-width="3.5" stroke-linecap="round"><path d="M42 178 L128 54"/><path d="M62 182 L148 58"/></g>'
+  +'<g stroke="#8d8676" stroke-width="2.5"><path d="M50 166 l20 4 M64 146 l20 4 M78 126 l20 4 M92 106 l20 4 M106 86 l20 4"/></g>'
+  +'<g transform="rotate(-55 96 118)"><rect x="76" y="104" width="40" height="27" rx="5" fill="'+P.warm+'"/>'
+  +'<rect x="82" y="110" width="12" height="10" rx="2" fill="#0e7490"/><rect x="98" y="110" width="12" height="10" rx="2" fill="#0e7490"/></g>'
+  +'<g fill="#e6e1d4"><rect x="258" y="150" width="30" height="30"/><rect x="300" y="158" width="26" height="22"/><rect x="336" y="152" width="28" height="28"/></g>'
+  +'<g fill="#8a3a2a"><path d="M252 150 l21 -14 l21 14z"/><path d="M295 158 l18 -12 l18 12z"/><path d="M330 152 l20 -13 l20 13z"/></g>'
+  +'<rect y="180" width="400" height="10" fill="#2a3540"/>'+end();};
+M.gnome=function(){return base({skyA:'#1e2a1c',skyB:'#33502c',sc:'#b45309'})
+  +'<path d="M0 140 q200 -22 400 0 L400 190 L0 190Z" fill="#2f7a4a"/>'
+  +'<g><path d="M200 92 l24 44 l-48 0z" fill="'+P.warm+'"/>'
+  +'<path d="M176 136 l48 0 l0 20 q-24 12 -48 0z" fill="#e8cfb0"/>'
+  +'<path d="M182 150 q18 26 36 0 q-18 16 -36 0z" fill="'+P.white+'"/>'
+  +'<rect x="178" y="152" width="44" height="26" rx="8" fill="#2f6b8f"/></g>'
+  +'<g><path d="M96 128 l14 26 l-28 0z" fill="'+P.pink+'"/><rect x="84" y="154" width="24" height="18" rx="6" fill="#3f8f56"/></g>'
+  +'<g><path d="M304 132 l13 24 l-26 0z" fill="#7c3aed"/><rect x="293" y="156" width="22" height="16" rx="6" fill="'+P.warm+'"/></g>'
+  +'<g fill="'+P.sun+'"><circle cx="140" cy="168" r="5"/><circle cx="264" cy="172" r="5"/></g>'+end();};
+M.bowling=function(){return base({skyA:'#1a1330',skyB:'#2c1c4e',sun:false})
+  +'<rect y="0" width="400" height="190" fill="#241a3c"/>'
+  +'<path d="M110 190 L160 44 L240 44 L290 190Z" fill="#8a5a3a"/>'
+  +'<path d="M126 190 L168 52 L232 52 L274 190Z" fill="#d8b877"/>'
+  +'<g fill="#20242c">'
+  +'<path d="M196 62 q7 0 7 9 q0 5 -3 8 q5 4 5 11 q0 10 -9 10 q-9 0 -9 -10 q0 -7 5 -11 q-3 -3 -3 -8 q0 -9 7 -9z"/>'
+  +'<path d="M174 68 q6 0 6 8 q0 5 -3 7 q5 4 5 10 q0 9 -8 9 q-8 0 -8 -9 q0 -6 5 -10 q-3 -2 -3 -7 q0 -8 6 -8z"/>'
+  +'<path d="M218 68 q6 0 6 8 q0 5 -3 7 q5 4 5 10 q0 9 -8 9 q-8 0 -8 -9 q0 -6 5 -10 q-3 -2 -3 -7 q0 -8 6 -8z"/>'
+  +'</g>'
+  +'<g fill="#d6336c"><path d="M196 70 h-4 v6 h4z"/></g>'
+  +'<circle cx="188" cy="146" r="24" fill="#0077b6"/>'
+  +'<g fill="#083a63"><circle cx="181" cy="139" r="3.4"/><circle cx="192" cy="137" r="3.4"/><circle cx="187" cy="148" r="3.4"/></g>'+end();};
+M.tramp=function(){return base({skyA:'#101f36',skyB:'#1d3a5e',sun:false})
+  +'<rect y="0" width="400" height="190" fill="#16294a"/>'
+  +'<g fill="#0077b6"><rect x="60" y="140" width="280" height="14" rx="7"/></g>'
+  +'<g stroke="#3a4a72" stroke-width="4"><path d="M74 154 v26 M150 154 v26 M250 154 v26 M326 154 v26"/></g>'
+  +'<g stroke="#0891b2" stroke-width="3" fill="none" opacity=".8"><path d="M96 140 q104 26 208 0"/></g>'
+  +'<g fill="#e07b1f"><circle cx="200" cy="56" r="13"/><path d="M188 72 l24 0 l6 34 l-36 0z"/></g>'
+  +'<g stroke="#e07b1f" stroke-width="8" stroke-linecap="round"><path d="M188 78 l-26 -20 M212 78 l26 -20 M192 106 l-12 26 M208 106 l12 26"/></g>'
+  +'<g stroke="#0891b2" stroke-width="3" stroke-linecap="round" opacity=".7"><path d="M150 88 l-10 -12 M250 88 l10 -12 M200 30 l0 -14"/></g>'+end();};
+M.cinema=function(){return base({skyA:'#12101c',skyB:'#1c1830',sun:false})
+  +'<rect y="0" width="400" height="190" fill="#151221"/>'
+  +'<rect x="46" y="22" width="308" height="100" rx="5" fill="#f0ece3"/>'
+  +'<rect x="56" y="32" width="288" height="80" rx="3" fill="#20242c"/>'
+  +'<g fill="#c8ccd4"><path d="M56 112 l72 -80 l40 0 l-72 80z" opacity=".55"/><path d="M172 112 l72 -80 l30 0 l-72 80z" opacity=".35"/></g>'
+  +'<g fill="#1e1a2e"><rect x="24" y="140" width="60" height="34" rx="10"/><rect x="104" y="140" width="60" height="34" rx="10"/><rect x="184" y="140" width="60" height="34" rx="10"/><rect x="264" y="140" width="60" height="34" rx="10"/><rect x="344" y="140" width="46" height="34" rx="10"/></g>'
+  +'<g fill="#3a3252"><rect x="30" y="132" width="48" height="12" rx="6"/><rect x="110" y="132" width="48" height="12" rx="6"/><rect x="190" y="132" width="48" height="12" rx="6"/><rect x="270" y="132" width="48" height="12" rx="6"/></g>'
+  +'<g fill="#e07b1f"><circle cx="134" cy="128" r="9"/><circle cx="214" cy="128" r="9"/></g>'+end();};
+M.karts=function(){return base({skyA:'#1a2436',skyB:'#33506b',sc:'#b45309'})
+  +'<rect y="112" width="400" height="78" fill="#e5e0d5"/>'
+  +'<g stroke="#20242c" stroke-width="4" stroke-dasharray="16 14" opacity=".7"><path d="M0 130 h400"/></g>'
+  +'<g fill="#c0392b"><path d="M118 168 l0 -18 q0 -8 10 -8 l24 0 l10 -16 l32 0 l6 16 l44 0 q10 0 10 10 l0 16z"/></g>'
+  +'<g fill="#ffffff"><circle cx="146" cy="170" r="15"/><circle cx="240" cy="170" r="15"/></g>'
+  +'<g fill="#a39d8f"><circle cx="146" cy="170" r="6"/><circle cx="240" cy="170" r="6"/></g>'
+  +'<circle cx="186" cy="126" r="12" fill="#b45309"/><path d="M176 126 q10 -8 20 0z" fill="#f0ece3"/>'
+  +'<g fill="#20242c" opacity=".5"><path d="M96 152 l-40 6 l40 6z"/><path d="M96 166 l-56 6 l56 6z"/></g>'
+  +'<g fill="#e07b1f"><rect x="330" y="72" width="14" height="52"/></g>'
+  +'<path d="M344 72 h40 v10 h-14 v10 h14 v10 h-40z" fill="#20242c"/>'+end();};
+M.ropes=function(){return base({skyA:'#16261c',skyB:'#2a4632',sc:'#b45309'})+hills('#1c3322','#142718')
+  +'<g fill="#4a3728"><rect x="52" y="46" width="15" height="130"/><rect x="330" y="60" width="15" height="116"/></g>'
+  +'<g fill="#26502f"><circle cx="60" cy="42" r="26"/><circle cx="338" cy="56" r="22"/></g>'
+  +'<path d="M60 74 q140 60 278 8" stroke="#6f6a5e" stroke-width="3" fill="none"/>'
+  +'<g><rect x="182" y="96" width="26" height="10" rx="5" fill="#a39d8f"/>'
+  +'<path d="M195 106 v14" stroke="#a39d8f" stroke-width="3"/></g>'
+  +'<g fill="#e07b1f"><circle cx="195" cy="130" r="11"/><path d="M184 142 l22 0 l5 28 l-32 0z"/></g>'
+  +'<g stroke="#e07b1f" stroke-width="7" stroke-linecap="round"><path d="M188 120 l-8 -12 M202 120 l8 -12 M188 170 l-8 14 M202 170 l8 14"/></g>'+end();};
+M.climb=function(){return base({skyA:'#1c1428',skyB:'#2e2040',sun:false})
+  +'<rect y="0" width="400" height="190" fill="#2a1e3c"/>'
+  +'<path d="M40 190 L40 20 L250 20 L250 96 L360 96 L360 190Z" fill="#4a3a5e"/>'
+  +'<path d="M250 96 L360 96 L360 130 L250 130Z" fill="#3e3050"/>'
+  +'<g><circle cx="80" cy="60" r="8" fill="#c0392b"/><circle cx="140" cy="42" r="8" fill="#b45309"/><circle cx="200" cy="70" r="8" fill="#0891b2"/><circle cx="110" cy="110" r="8" fill="#178a45"/><circle cx="176" cy="126" r="8" fill="#d6336c"/><circle cx="220" cy="156" r="8" fill="#e07b1f"/><circle cx="300" cy="140" r="8" fill="#0891b2"/><circle cx="70" cy="152" r="8" fill="#7c3aed"/></g>'
+  +'<g fill="#0077b6"><circle cx="150" cy="88" r="11"/><path d="M139 100 l22 0 l5 30 l-32 0z"/></g>'
+  +'<g stroke="#0077b6" stroke-width="7" stroke-linecap="round"><path d="M142 80 l-4 -22 M160 82 l12 -18 M144 130 l-8 22 M160 130 l14 18"/></g>'
+  +'<path d="M150 100 q60 40 40 90" stroke="#b45309" stroke-width="3" fill="none"/>'+end();};
+M.glass=function(){return base({skyA:'#2a1810',skyB:'#4a2610',sun:false})
+  +'<rect y="0" width="400" height="190" fill="#3a1e10"/>'
+  +'<circle cx="118" cy="120" r="46" fill="#7a3410"/><circle cx="118" cy="120" r="30" fill="#e07b1f"/><circle cx="118" cy="120" r="16" fill="#b45309"/>'
+  +'<path d="M158 118 l112 -14" stroke="#6f6a5e" stroke-width="7" stroke-linecap="round"/>'
+  +'<circle cx="168" cy="116" r="14" fill="#b45309"/>'
+  +'<g fill="#7fe3f0" opacity=".85"><path d="M290 156 q-16 -22 0 -40 q16 -18 32 0 q16 18 0 40z"/>'
+  +'<rect x="298" y="150" width="16" height="18" rx="3"/><rect x="288" y="164" width="36" height="8" rx="4"/></g>'
+  +'<g fill="#0e7490" opacity=".7"><path d="M348 168 q-10 -14 0 -26 q10 -12 20 0 q10 12 0 26z"/></g>'
+  +'<g fill="#b45309" opacity=".55"><circle cx="200" cy="60" r="4"/><circle cx="228" cy="44" r="3"/><circle cx="176" cy="42" r="3"/></g>'+end();};
+
+M.paint=function(){return base({skyA:'#1e1830',skyB:'#332a50',sun:false})
+  +'<rect y="0" width="400" height="190" fill="#2a2340"/>'
+  +'<rect y="132" width="400" height="58" fill="#5a4a3a"/>'
+  +'<g fill="#e8e2d4"><path d="M150 132 q-14 -46 14 -58 q22 -9 44 0 q28 12 14 58z"/></g>'
+  +'<path d="M164 96 q22 -10 44 0 q-4 22 -22 22 q-18 0 -22 -22z" fill="#0891b2"/>'
+  +'<path d="M172 74 q16 -6 32 0 q-16 8 -32 0z" fill="#d6336c"/>'
+  +'<g fill="#6f6a5e"><rect x="248" y="60" width="7" height="66" rx="3" transform="rotate(16 251 93)"/></g>'
+  +'<path d="M262 56 q10 4 8 16 l-16 -6z" fill="#b45309"/>'
+  +'<g><circle cx="70" cy="146" r="13" fill="#c0392b"/><circle cx="102" cy="146" r="13" fill="#b45309"/><circle cx="134" cy="150" r="11" fill="#178a45"/><circle cx="322" cy="146" r="13" fill="#0077b6"/><circle cx="352" cy="150" r="11" fill="#7c3aed"/></g>'
+  +'<g fill="#ffffff" opacity=".25"><ellipse cx="182" cy="134" rx="42" ry="6"/></g>'+end();};
+M.craft=function(){return base({skyA:'#20142e',skyB:'#38224e',sun:false})
+  +'<rect y="0" width="400" height="190" fill="#2c1c40"/>'
+  +'<rect y="120" width="400" height="70" fill="#6a5240"/>'
+  +'<rect y="120" width="400" height="8" fill="#8a6a52"/>'
+  +'<g fill="#178a45"><path d="M60 120 q-14 -30 10 -38 q24 -8 30 14 q6 20 -12 24z"/></g>'
+  +'<g fill="#d6336c"><rect x="140" y="70" width="76" height="50" rx="8"/></g>'
+  +'<path d="M140 70 l-18 14 l14 12 l14 -10z" fill="#d6336c"/><path d="M216 70 l18 14 l-14 12 l-14 -10z" fill="#d6336c"/>'
+  +'<g fill="#b45309"><circle cx="178" cy="94" r="12"/></g>'
+  +'<g><circle cx="280" cy="102" r="20" fill="#0891b2"/><circle cx="316" cy="110" r="14" fill="#7c3aed"/></g>'
+  +'<g fill="#20242c"><rect x="248" y="132" width="10" height="40" rx="5"/><rect x="268" y="136" width="10" height="36" rx="5"/><rect x="288" y="132" width="10" height="40" rx="5"/></g>'
+  +'<g fill="#e07b1f"><rect x="246" y="126" width="14" height="10" rx="4"/><rect x="266" y="130" width="14" height="10" rx="4"/><rect x="286" y="126" width="14" height="10" rx="4"/></g>'+end();};
+M.choc=function(){return base({skyA:'#2a1810',skyB:'#43261a',sun:false})
+  +'<rect y="0" width="400" height="190" fill="#38221a"/>'
+  +'<rect y="128" width="400" height="62" fill="#5a3a28"/>'
+  +'<g fill="#7a4a2e"><rect x="112" y="66" width="120" height="72" rx="6"/></g>'
+  +'<g fill="#5c3520"><rect x="120" y="74" width="50" height="26" rx="3"/><rect x="176" y="74" width="50" height="26" rx="3"/><rect x="120" y="106" width="50" height="26" rx="3"/><rect x="176" y="106" width="50" height="26" rx="3"/></g>'
+  +'<g fill="#9a5f38"><path d="M262 138 q-18 -20 0 -38 q18 -18 36 0 q18 18 0 38z"/><circle cx="280" cy="92" r="8"/></g>'
+  +'<g fill="#9a5f38"><path d="M320 140 q-13 -15 0 -28 q13 -13 26 0 q13 13 0 28z"/></g>'
+  +'<g fill="#20242c" opacity=".7"><path d="M266 112 q14 -8 28 0 q-14 6 -28 0z"/></g>'
+  +'<g fill="#c98a4a" opacity=".8"><circle cx="70" cy="112" r="16"/><circle cx="70" cy="112" r="8" fill="#5c3520"/></g>'
+  +'<g fill="#b45309" opacity=".5"><circle cx="180" cy="42" r="4"/><circle cx="212" cy="34" r="3"/><circle cx="150" cy="34" r="3"/></g>'+end();};
+M.cook=function(){return base({skyA:'#241a12',skyB:'#3e2a1c',sun:false})
+  +'<rect y="0" width="400" height="190" fill="#332318"/>'
+  +'<rect y="140" width="400" height="50" fill="#6a5240"/>'
+  +'<g fill="#e8d8b8"><circle cx="180" cy="106" r="58"/></g>'
+  +'<g fill="#d94a2e"><circle cx="180" cy="106" r="47"/></g>'
+  +'<g fill="#f4e4b0"><circle cx="156" cy="88" r="10"/><circle cx="204" cy="94" r="10"/><circle cx="170" cy="126" r="10"/><circle cx="208" cy="128" r="9"/><circle cx="184" cy="72" r="8"/></g>'
+  +'<g fill="#3f8f56"><circle cx="194" cy="112" r="5"/><circle cx="160" cy="112" r="5"/><circle cx="188" cy="88" r="4"/></g>'
+  +'<g fill="#6f6a5e"><rect x="238" y="98" width="110" height="12" rx="6"/></g>'
+  +'<g fill="#20242c"><path d="M56 78 q0 -22 22 -22 q6 -16 24 -16 q18 0 24 16 q22 0 22 22 q0 14 -14 18 l0 26 l-64 0 l0 -26 q-14 -4 -14 -18z" opacity=".9"/></g>'+end();};
+M.easel=function(){return base({skyA:'#151d2e',skyB:'#26344c',sun:false})
+  +'<rect y="0" width="400" height="190" fill="#1e2840"/>'
+  +'<g stroke="#8a6a4a" stroke-width="8" stroke-linecap="round"><path d="M150 178 L182 74 M250 178 L218 74 M162 140 h76"/></g>'
+  +'<rect x="140" y="52" width="120" height="86" fill="#20242c"/>'
+  +'<path d="M140 138 L140 108 q30 -26 60 -6 q30 20 60 -8 L260 138Z" fill="#3f8f56"/>'
+  +'<path d="M140 138 L140 122 q30 -14 60 2 q30 16 60 -4 L260 138Z" fill="#2f6b46"/>'
+  +'<circle cx="226" cy="76" r="12" fill="#b45309"/>'
+  +'<g><circle cx="80" cy="120" r="24" fill="#6f6a5e"/><circle cx="80" cy="120" r="9" fill="#1e2840"/>'
+  +'<circle cx="68" cy="106" r="5" fill="#c0392b"/><circle cx="88" cy="102" r="5" fill="#0077b6"/><circle cx="96" cy="118" r="5" fill="#b45309"/><circle cx="72" cy="136" r="5" fill="#178a45"/></g>'
+  +'<g fill="#8a6a4a"><rect x="316" y="60" width="7" height="70" rx="3" transform="rotate(-14 319 95)"/></g>'
+  +'<path d="M306 56 q10 2 10 14 l-16 -4z" fill="#d6336c"/>'+end();};
+M.wheel=function(){return base({skyA:'#1e1c18',skyB:'#33302a',sun:false})
+  +'<rect y="0" width="400" height="190" fill="#2a2822"/>'
+  +'<rect y="150" width="400" height="40" fill="#4a4238"/>'
+  +'<g fill="#5a5248"><rect x="150" y="120" width="100" height="34" rx="6"/></g>'
+  +'<ellipse cx="200" cy="120" rx="70" ry="16" fill="#7a6f60"/>'
+  +'<ellipse cx="200" cy="116" rx="70" ry="14" fill="#8d8272"/>'
+  +'<g fill="#9a6a48"><path d="M172 114 q-6 -34 10 -46 q18 -14 36 0 q16 12 10 46z"/></g>'
+  +'<ellipse cx="200" cy="68" rx="18" ry="6" fill="#7a4f34"/>'
+  +'<g fill="#8a5a3a"><circle cx="112" cy="82" r="13"/><circle cx="288" cy="82" r="13"/></g>'
+  +'<path d="M124 90 q34 12 48 26" stroke="#8a5a3a" stroke-width="11" stroke-linecap="round" fill="none"/>'
+  +'<path d="M276 90 q-34 12 -48 26" stroke="#8a5a3a" stroke-width="11" stroke-linecap="round" fill="none"/>'
+  +'<g stroke="#6a6055" stroke-width="4"><path d="M200 154 v22"/></g>'+end();};
+
+function art(k){
+  try{ var f=M[k]||M.golf; return f(); }
+  catch(e){ return '<svg viewBox="0 0 400 190" xmlns="http://www.w3.org/2000/svg"><rect width="400" height="190" fill="#ffffff"/></svg>'; }
+}
+
+/* ---------------- data ----------------
+   mi / min are approximate driving from Woolacombe Bay, non-peak.
+   Add 15–40% for mid-afternoon August traffic through Braunton/Barnstaple.
+   ind: 0 outdoor, 1 indoor, 2 mixed.  tone: calm | mixed | loud
+*/
+var D=[
+{n:"Woolacombe Riding Stables",sc:"horse",mi:1.2,min:4,walk:0,cat:"Animals",big:0,ind:0,tone:"calm",
+ theo:"Beach ride across Woolacombe and Putsborough sands \u2014 the memorable one from the week.",
+ josh:"A lead-rein or paddock session rather than the beach ride. Slow, repetitive, sensory in a good way.",
+ note:"They assess ability first and are strict about it \u2014 be straight when booking or you may be turned down.",chk:1},
+{n:"Funder Island Crazy Golf",sc:"golf",mi:0.4,min:6,walk:1,cat:"Active",big:0,ind:0,tone:"mixed",
+ theo:"18 pirate-themed holes with a few genuinely tricky ones. Second game is free.",
+ josh:"Short, clear turns with a defined end. Doughnuts and slushies on site as the reward.",
+ note:"Open till 8.30pm, so it works as an after-dinner filler. Walkable from the park.",chk:0},
+{n:"Sunspot Amusements",sc:"arcade",mi:0.4,min:6,walk:1,cat:"Rainy",big:0,ind:1,tone:"loud",
+ theo:"2p pushers, air hockey and ticket machines. Takes a fiver a long way.",
+ josh:"Bright and loud \u2014 go early or in a gap. Ten minutes here is often plenty.",
+ note:"Take 2p and 10p coins. Dated but the staff are well reviewed. Genuine rainy-day standby.",chk:0},
+{n:"Surf lesson \u2014 Surfing Woolacombe",sc:"surf",mi:0.4,min:6,walk:1,cat:"Active",big:0,ind:0,tone:"mixed",
+ theo:"Old enough for a proper group lesson. Most kids stand up in the first session.",
+ josh:"Better as a private or family lesson than a group. Instructors here have visible experience with autistic and deaf children.",
+ note:"Book ahead in August. Woolacombe Surf Centre next door is the other well-rated option.",chk:1},
+{n:"Waves Creative Cafe",sc:"craft",mi:2.2,min:6,walk:0,cat:"Making",big:0,ind:1,tone:"calm",
+ theo:"Pottery painting, slime making and t-shirt printing, all in one room. Pick your piece and go.",
+ josh:"Reviewers describe it as calming and completely unhurried \u2014 nobody moves you on. Next-day kiln pickup.",
+ note:"At Golden Coast Holiday Village, six minutes away. Open 10am\u20133pm, till 4pm midweek. Hand items in early enough for that day's firing.",chk:1},
+{n:"Ilfracombe Aquarium",sc:"aquarium",mi:8.5,min:20,walk:0,cat:"Animals",big:0,ind:1,tone:"calm",
+ theo:"Follows a river from source to open sea, all native species. Staff will show you crabs and starfish feeding.",
+ josh:"Small, dim, quiet, no queues on a weekday. Roughly 45 minutes, which is about right.",
+ note:"Small for the price if you expect a big aquarium. No toilets inside \u2014 public ones next door.",chk:0},
+{n:"Ilfracombe Chocolate Emporium",sc:"choc",mi:8.5,min:20,walk:0,cat:"Making",big:0,ind:1,tone:"calm",
+ theo:"Masterclass covering how chocolate is grown and made, a tasting, and decorating chocolate men to take home.",
+ josh:"A parent review specifically praises how sensitively the owner taught their autistic daughter. Small group, small room.",
+ note:"Workshops must be booked \u2014 shop hours are limited and vary. Phone ahead rather than turning up. There's a small chocolate museum out back.",chk:1},
+{n:"Coastal Cooking",sc:"cook",mi:8.5,min:20,walk:0,cat:"Making",big:0,ind:1,tone:"calm",
+ theo:"Pizza-making session \u2014 dough, sauce and cooking it properly. Two-hour pasty and scone course is the other option.",
+ josh:"Hands in flour, clear steps, food at the end. Ian is described as relaxed and flexible about swapping ingredients.",
+ note:"Check the minimum age when booking \u2014 courses lean adult, though families do attend. You take what you make home.",chk:1},
+{n:"Art School Studio",sc:"easel",mi:8.5,min:20,walk:0,cat:"Making",big:0,ind:1,tone:"calm",
+ theo:"Jane runs craft and painting workshops with everything supplied \u2014 canvas, paints, apron, easel.",
+ josh:"Collage and card-making sessions suit shorter attention better than a painting class.",
+ note:"Much of the programme is adult paint-and-sip \u2014 message ahead to ask what's on that suits children.",chk:1},
+{n:"The Landmark Theatre",sc:"cinema",mi:8.5,min:20,walk:0,cat:"Rainy",big:0,ind:1,tone:"mixed",
+ theo:"Family shows through the summer, right on the seafront. Depends entirely what's programmed that week.",
+ josh:"A seated show is a big ask. Check the running time and whether there's an interval before booking.",
+ note:"Card only. Check the What's On listing \u2014 some weeks have nothing suitable.",chk:1},
+{n:"Ilfracombe boat trip",sc:"boat",mi:8.5,min:20,walk:0,cat:"Ride",big:0,ind:0,tone:"mixed",
+ theo:"Coastal sea safari or a trip towards Lundy \u2014 seals, seabirds, sometimes dolphins.",
+ josh:"A boat is a confined space he can't leave, so the shorter harbour trips are the safer choice.",
+ note:"Several operators run from the harbour. Weather dependent and often cancelled \u2014 check on the day.",chk:1},
+{n:"Paint a Pot",sc:"paint",mi:11,min:22,walk:0,cat:"Making",big:0,ind:1,tone:"calm",
+ theo:"Big choice of blanks \u2014 dinosaurs, money boxes, plates. Price includes glazing and firing.",
+ josh:"A reviewing family did it with a 3-year-old and an 8-year-old together, which is close to your split.",
+ note:"Open every day 10.30am\u20134pm. They'll post finished pieces home for a small charge if you're leaving before firing.",chk:0},
+{n:"Watermouth Castle",sc:"castle",mi:10.5,min:23,walk:0,cat:"Attraction",big:1,ind:2,tone:"mixed",
+ theo:"Ball run, gem digging, model railway, gardens and small rides. Easily a full day.",
+ josh:"Some indoor sections are dark walkthroughs with animated figures that move suddenly \u2014 preview these on the website first.",
+ note:"Bring 2p and 10p coins for the arcade. Grounds are steep. Open 10am\u20135pm.",chk:0,url:"http://www.watermouthcastle.com/"},
+{n:"Combe Martin Wildlife & Dinosaur Park",sc:"dino",mi:13,min:30,walk:0,cat:"Animals",big:1,ind:2,tone:"loud",
+ theo:"Animatronic dinosaurs, sea lion show, wolves and big cats. Reliably a hit at eight.",
+ josh:"The dinosaurs roar and lunge \u2014 watch a video at home first. Indoor soft play and an undercover play area if it rains.",
+ note:"Huge, hilly site. Food is pricey; take a picnic. Open 10am\u20135pm.",chk:0,url:"http://www.cmwdp.co.uk/"},
+{n:"JunglaRoo soft play",sc:"softplay",mi:15,min:35,walk:0,cat:"Active",big:0,ind:1,tone:"loud",
+ theo:"Large frames, slides and climbing. Adults are allowed in with them.",
+ josh:"Has a dedicated sensory room, which is unusual for soft play and makes it far more workable when it gets too much.",
+ note:"Book online in advance. Adults charged separately. Open 9am\u20136pm.",chk:0,url:"http://www.junglaroo.com/"},
+{n:"Air Extreme Trampoline Park",sc:"tramp",mi:15,min:35,walk:0,cat:"Active",big:0,ind:1,tone:"loud",
+ theo:"Sessions run on the hour with enough different zones to hold him for a full one.",
+ josh:"Reviewers specifically note the music isn't overly loud, which is rare for a trampoline park. Free shoe lockers, free parking.",
+ note:"Book in advance for the discount and to guarantee a slot. Open 10am\u20136pm, 9am\u20134pm Sundays.",chk:0},
+{n:"Let's Go Bowling",sc:"bowling",mi:15,min:35,walk:0,cat:"Active",big:0,ind:1,tone:"loud",
+ theo:"Ten-pin plus an arcade. Food delivered to the lane while you play.",
+ josh:"Ball ramps available so he can actually compete. Clear turn-taking structure suits him.",
+ note:"Open till 11pm \u2014 the only thing on this list that works late. Some arcade machines are broken. Lanes are dimly lit.",chk:0},
+{n:"Scott Cinemas Barnstaple",sc:"cinema",mi:15,min:35,walk:0,cat:"Rainy",big:0,ind:1,tone:"mixed",
+ theo:"Small, comfortable, well-run town cinema. Whatever family release is out that week.",
+ josh:"Small screens mean a smaller, quieter room than a multiplex. Aisle seat, and you can leave easily.",
+ note:"Meerkat deal makes it cheap. Long advert reel before the film \u2014 factor in 20 minutes.",chk:0},
+{n:"Exmoor Zoo",sc:"zoo",mi:17,min:35,walk:0,cat:"Animals",big:1,ind:0,tone:"calm",
+ theo:"Small but unusual \u2014 clouded leopards, the Exmoor 'beast', and keeper talks he can get close to.",
+ josh:"Compact and intimate rather than sprawling, with viewing windows at child height. Much calmer than a large zoo.",
+ note:"Paths are steep and rough. Open 10am\u20135pm. Feeding times are the highlight \u2014 check the board on arrival.",chk:0,url:"https://www.exmoorzoo.co.uk/"},
+{n:"The BIG Sheep",sc:"farm",mi:25,min:45,walk:0,cat:"Attraction",big:1,ind:2,tone:"loud",
+ theo:"Rollercoaster, indoor play barn, sheep racing and animal shows. Closest thing round here to Milky Way.",
+ josh:"Indoor barn is a good retreat when the outdoor rides get loud. Animal handling is calmer than the rides.",
+ note:"Easy to navigate, which matters with two different energy levels. Open 10am\u20135pm. No outside food.",chk:0,url:"https://www.thebigsheep.co.uk/"},
+{n:"Hands On Cookery School",sc:"cook",mi:24,min:45,walk:0,cat:"Making",big:0,ind:1,tone:"calm",
+ theo:"A working kitchen with real technique taught \u2014 a reviewing parent calls it emphatically not a decorate-a-cupcake service.",
+ josh:"Structured and safety-led, which is the format rather than a free-for-all. Ask about the youngest age they take.",
+ note:"Small operation with few reviews but both are glowing. Book directly and explain both ages when you call.",chk:1},
+{n:"Skern Adventure, Appledore",sc:"ropes",mi:26,min:50,walk:0,cat:"Active",big:1,ind:0,tone:"mixed",
+ theo:"High ropes, zip line, climbing wall, archery and kayaking. The biggest single hit on this list for an eight-year-old.",
+ josh:"They run day activities as well as residentials \u2014 ask for the younger age options and a one-to-one instructor.",
+ note:"Book directly and explain both ages when you call. Instructors are consistently praised for patience.",chk:1},
+{n:"Rock and Rapid Adventures",sc:"climb",mi:28,min:55,walk:0,cat:"Active",big:0,ind:1,tone:"calm",
+ theo:"Full climbing wall with instruction, plus bouldering, archery and axe throwing.",
+ josh:"A reviewer took a five- and a three-year-old bouldering here and rated it. Around \u00a310 each for as long as you like.",
+ note:"Indoors, so it's a proper wet-weather option. Bouldering needs no booking; roped climbing does. Shoe hire \u00a32.",chk:0},
+{n:"Pebble Ridge Adventure Golf & Go Karts",sc:"karts",mi:28,min:55,walk:0,cat:"Ride",big:0,ind:0,tone:"mixed",
+ theo:"Petrol go-karts, brand new for this season, seven minutes a session. This is the one he'll talk about.",
+ josh:"Height restrictions will likely rule him out of the karts \u2014 the adventure golf runs alongside for him.",
+ note:"About \u00a310 for the karts, \u00a37 for the golf. Open 10am\u20136pm. Pay-and-display car park right there.",chk:1},
+{n:"Lynton & Lynmouth Cliff Railway",sc:"railway",mi:25,min:55,walk:0,cat:"Ride",big:0,ind:0,tone:"calm",
+ theo:"Victorian water-powered funicular up a cliff. He'll want to know how it works, and they explain it.",
+ josh:"Two-minute ride, clear start and end, big view. Short and entirely self-contained.",
+ note:"Under \u00a34 each way. Open 10am\u20136pm. Not buggy accessible. Pair with Lynmouth harbour.",chk:0},
+{n:"Quince Honey Farm",sc:"bee",mi:30,min:55,walk:0,cat:"Making",big:1,ind:2,tone:"calm",
+ theo:"Live bee exhibits behind glass, candle rolling to take home, and a real working farm.",
+ josh:"Hands-on and structured. Reviewers with neurodivergent children specifically rate the facilitators here.",
+ note:"Closes at 4pm, earlier than everything else. Indoor play area and a good cafe. Opens 9.30am.",chk:0,url:"https://www.quincehoneyfarm.co.uk/"},
+{n:"Tarka Pottery",sc:"wheel",mi:32,min:62,walk:0,cat:"Making",big:0,ind:1,tone:"calm",
+ theo:"Actual wheel throwing with proper tuition, then decorating what he's made. Universally five-star reviewed.",
+ josh:"Hand-building rather than the wheel is the realistic option at five \u2014 ask when booking.",
+ note:"Open Wed and Sat 10am\u20134pm only, mornings Thu and Fri. Pieces are fired and posted on. Book well ahead.",chk:1},
+{n:"The Gnome Reserve",sc:"gnome",mi:30,min:62,walk:0,cat:"Attraction",big:0,ind:0,tone:"calm",
+ theo:"Over a thousand gnomes hidden through four acres. Donkey rides when they're running.",
+ josh:"You wear a gnome hat and it's a hunt with a clear task. Small, quiet, no queues.",
+ note:"Attached to a garden centre with a well-reviewed cafe. An hour, not a day.",chk:1},
+{n:"Dartington Crystal",sc:"glass",mi:32,min:65,walk:0,cat:"Making",big:0,ind:1,tone:"calm",
+ theo:"Watch master glassblowers working molten glass from a furnace. Genuinely gripping to watch.",
+ josh:"The painting studio lets him decorate his own glass to take home \u2014 hands-on and at his own pace.",
+ note:"Closed Sundays, open 9.30am\u20134.30pm. Last painting start is 3pm. Weekday mornings have a two-for-one deal.",chk:1},
+{n:"Milky Way Adventure Park",sc:"coaster",mi:33,min:65,walk:0,cat:"Attraction",big:1,ind:2,tone:"loud",
+ theo:"Rollercoaster, indoor rides, bird of prey show, magic show, sci-fi collection. A genuine full day.",
+ josh:"Almost all of it is under cover, so noise is contained but constant. The falconer runs a strict sit-still show \u2014 skip it if that's a stretch.",
+ note:"The furthest thing on this list. One ticket covers everything. Open 10am\u20135pm. Make it the whole day.",chk:0}
+];
+
+/* ---------------- render ---------------- */
+var mapsUrl=function(n){return 'https://www.google.com/maps/search/?api=1&query='+encodeURIComponent(n+', Devon, UK');};
+var picsUrl=function(n){return 'https://www.google.com/search?tbm=isch&q='+encodeURIComponent(n+' Devon');};
+var toneLabel={calm:'Calm',mixed:'Mixed',loud:'Loud'};
+var indLabel={0:'Outdoor',1:'Indoor',2:'Indoor + out'};
+
+/* Drop a photo at img/<slug>.jpg and it replaces the illustration automatically.
+   Nothing is required — a missing file simply leaves the drawing in place.
+   Add a line to CREDITS to show an attribution caption over the photo. */
+function slug(n){
+  return n.toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-+|-+$/g,'');
+}
+var CREDITS={
+  /* "the-big-sheep": "© The BIG Sheep" */
+};
+
+function dist(x){
+  if(x.walk) return x.min+' min walk';
+  return x.min+' min drive';
+}
+function card(x){
+  var sl=slug(x.n);
+  var t='';
+  t+='<div class="card">';
+  t+='<div class="art">'+art(x.sc);
+  t+='<img class="photo" loading="lazy" alt="" src="img/'+sl+'.jpg" '
+    +'onerror="this.parentNode.querySelectorAll(\'.credit\').forEach(function(c){c.remove()});this.remove();">';
+  if(CREDITS[sl]) t+='<span class="credit">'+CREDITS[sl]+'</span>';
+  t+='</div>';
+  t+='<div class="body">';
+  t+='<div class="ttl">'+x.n+'</div>';
+  t+='<div class="tags">';
+  t+='<span class="tag d">'+(x.walk?'Walkable':x.mi+' mi')+'</span>';
+  t+='<span class="tag d">'+dist(x)+'</span>';
+  t+='<span class="tag'+(x.ind?' in':'')+'">'+indLabel[x.ind]+'</span>';
+  t+='<span class="tag '+(x.tone==='calm'?'calm':x.tone==='loud'?'loud':'')+'">'+toneLabel[x.tone]+'</span>';
+  if(x.chk) t+='<span class="tag chk">Verify first</span>';
+  t+='</div>';
+  t+='<div class="kid"><span class="pill t">Theo</span><p>'+x.theo+'</p></div>';
+  t+='<div class="kid"><span class="pill j">Josh</span><p>'+x.josh+'</p></div>';
+  t+='<div class="note">'+x.note+'</div>';
+  t+='<div class="acts">';
+  t+='<a class="btn" href="'+mapsUrl(x.n)+'" target="_blank" rel="noopener">Maps</a>';
+  t+='<a class="btn" href="'+picsUrl(x.n)+'" target="_blank" rel="noopener">Photos</a>';
+  if(x.url) t+='<a class="btn" href="'+x.url+'" target="_blank" rel="noopener">Site</a>';
+  t+='</div></div></div>';
+  return t;
+}
+
+var CATS=['All','Active','Attraction','Animals','Rainy','Ride','Making','Walkable'];
+var curCat='All';
+
+function renderNear(){
+  var el=document.getElementById('p-near');
+  var list=D.slice().sort(function(a,b){return a.min-b.min;});
+  var shown=curCat==='All'?list:list.filter(function(x){
+    if(curCat==='Walkable') return !!x.walk;
+    if(curCat==='Rainy') return x.cat==='Rainy'||x.ind===1;
+    return x.cat===curCat;
+  });
+  var walkable=D.filter(function(x){return x.walk;}).length;
+  var under30=D.filter(function(x){return x.min<=30;}).length;
+  var h='';
+  h+='<div class="status"><div class="statrow">'
+   +'<div class="stat"><b>'+D.length+'</b><span>ACTIVITIES</span></div>'
+   +'<div class="stat"><b>'+walkable+'</b><span>WALKABLE</span></div>'
+   +'<div class="stat"><b>'+under30+'</b><span>UNDER 30 MIN</span></div>'
+   +'<div class="stat"><b>65</b><span>MAX MINS</span></div>'
+   +'</div></div>';
+  h+='<div class="chips">';
+  CATS.forEach(function(c){h+='<button class="chip'+(c===curCat?' on':'')+'" data-cat="'+c+'">'+c+'</button>';});
+  h+='</div>';
+  if(!shown.length) h+='<div class="empty">Nothing in that category.</div>';
+  shown.forEach(function(x){h+=card(x);});
+  el.innerHTML=h;
+  var cs=el.querySelectorAll('.chip');
+  for(var i=0;i<cs.length;i++){
+    cs[i].addEventListener('click',function(){curCat=this.getAttribute('data-cat');renderNear();window.scrollTo(0,0);});
+  }
+}
+function renderRain(){
+  var el=document.getElementById('p-rain');
+  var list=D.filter(function(x){return x.ind>0;}).sort(function(a,b){return a.min-b.min;});
+  var h='<div class="status"><div class="statrow">'
+   +'<div class="stat"><b>'+list.length+'</b><span>WET OPTIONS</span></div>'
+   +'<div class="stat"><b>'+list.filter(function(x){return x.ind===1;}).length+'</b><span>FULLY INDOOR</span></div>'
+   +'<div class="stat"><b>'+list.filter(function(x){return x.tone==="calm";}).length+'</b><span>CALM ONES</span></div>'
+   +'</div></div>';
+  h+='<h2 class="sec">Nearest first</h2>';
+  list.forEach(function(x){h+=card(x);});
+  el.innerHTML=h;
+}
+function renderBig(){
+  var el=document.getElementById('p-big');
+  var list=D.filter(function(x){return x.big;}).sort(function(a,b){return a.min-b.min;});
+  var h='<div class="status"><div class="statrow">'
+   +'<div class="stat"><b>'+list.length+'</b><span>FULL DAYS</span></div>'
+   +'<div class="stat"><b>10</b><span>ALL OPEN AT</span></div>'
+   +'<div class="stat"><b>5</b><span>ALL SHUT BY</span></div>'
+   +'</div></div>';
+  h+='<h2 class="sec">Ticketed attractions — pick two or three</h2>';
+  list.forEach(function(x){h+=card(x);});
+  el.innerHTML=h;
+}
+
+var WEEK=[
+ {d:"Sat 15 Aug",t:"Arrive",book:null,col:"var(--ter)",
+  s:"Travel day. Nothing booked \u2014 <b>South Street Food</b> or the <b>Mortehoe chip hatch</b> for dinner rather than a restaurant."},
+ {d:"Sun 16 Aug",t:"Booked",book:"Bungee Trampoline",col:"var(--green)",
+  s:"On-park in the morning. Keep the afternoon light \u2014 <b>Funder Island</b> is a six-minute walk."},
+ {d:"Mon 17 Aug",t:"Open",book:null,col:"var(--blue)",
+  s:"Good day for a <b>big one</b> \u2014 Big Sheep or Combe Martin, both under 45 mins. Start at 10 when gates open."},
+ {d:"Tue 18 Aug",t:"Open",book:null,col:"var(--blue)",
+  s:"Barnstaple cluster: <b>Air Extreme</b> and <b>Let's Go Bowling</b> are a mile apart, cinema in town if you need a third."},
+ {d:"Wed 19 Aug",t:"Booked",book:"Crazi Bugz",col:"var(--green)",
+  s:"On-park. <b>Waves Creative Cafe</b> at Golden Coast is six minutes away and completely unhurried \u2014 good afternoon landing."},
+ {d:"Thu 20 Aug",t:"Open",book:null,col:"var(--blue)",
+  s:"The long one if you're doing it \u2014 <b>Milky Way</b> (65 min), or <b>Skern Adventure</b> (50 min) if Theo wants high ropes."},
+ {d:"Fri 21 Aug",t:"Open",book:null,col:"var(--blue)",
+  s:"Book a <b>surf lesson</b>, the <b>riding stables</b> or a <b>chocolate masterclass</b> for the last full day. All need advance booking."},
+ {d:"Sat 22 Aug",t:"Home",book:null,col:"var(--ter)",
+  s:"Leave early. <b>McDonald's at Roundswell</b> is on the A361 out if you need a stop."}
+];
+function renderWeek(){
+  var el=document.getElementById('p-week');
+  var h='<div class="status"><div class="statrow">'
+   +'<div class="stat"><b>8</b><span>DAYS</span></div>'
+   +'<div class="stat"><b>2</b><span>BOOKED</span></div>'
+   +'<div class="stat"><b>5</b><span>FREE DAYS</span></div>'
+   +'</div></div>';
+  h+='<h2 class="sec">15–22 August 2026</h2>';
+  WEEK.forEach(function(w){
+    h+='<div class="day"><div class="dhead"><b>'+w.d+'</b><span>'+w.t+'</span></div>';
+    if(w.book) h+='<div class="dbook"><span class="dot" style="background:'+w.col+'"></span>'+w.book+'</div>';
+    h+='<div class="dsug">'+w.s+'</div></div>';
+  });
+  h+='<div class="day"><div class="dhead"><b>Worth booking now</b><span>August</span></div>'
+   +'<div class="dsug">Riding stables, surf lessons and any sit-down dinner need advance booking in peak week. '
+   +'Everything tagged <b>Verify first</b> in the other tabs should be phoned or checked online before you drive.</div></div>';
+  el.innerHTML=h;
+}
+
+/* tabs */
+var IC={
+ near:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21s7-6.2 7-11a7 7 0 1 0-14 0c0 4.8 7 11 7 11z"/><circle cx="12" cy="10" r="2.6"/></svg>',
+ rain:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M7 15a4 4 0 0 1 .6-8 5.5 5.5 0 0 1 10.6 1.6A3.6 3.6 0 0 1 18 15z"/><path d="M8 18.5l-1 2M12 18.5l-1 2M16 18.5l-1 2"/></svg>',
+ big:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M3 20V9l5-4 5 4v11"/><path d="M13 20V12l4-3 4 3v8"/><path d="M2 20h20"/><path d="M7 13h2M17 15h1"/></svg>',
+ week:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="16" rx="3"/><path d="M3 10h18M8 3v4M16 3v4"/></svg>'
+};
+var TABS=[
+ {k:'near',l:'Near me',t:'Near the park',s:'Every option sorted by how long it takes to get there'},
+ {k:'rain',l:'Rainy day',t:'When it rains',s:'Indoor and undercover options, nearest first'},
+ {k:'big',l:'Big days',t:'Big days out',s:'Ticketed attractions worth a full day'},
+ {k:'week',l:'The week',t:'The week',s:'15–22 August, and what fits around what is booked'}
+];
+function setTab(k){
+  TABS.forEach(function(t){
+    var p=document.getElementById('p-'+t.k);
+    if(p) p.className='pane'+(t.k===k?' on':'');
+    var b=document.getElementById('tb-'+t.k);
+    if(b) b.className=(t.k===k?'on':'');
+    if(t.k===k){
+      document.getElementById('ttl').textContent=t.t;
+      document.getElementById('sb').textContent=t.s;
+    }
+  });
+  window.scrollTo(0,0);
+}
+function buildNav(){
+  var n=document.getElementById('nav'),h='';
+  TABS.forEach(function(t,i){
+    h+='<button id="tb-'+t.k+'" class="'+(i===0?'on':'')+'" data-k="'+t.k+'">'+IC[t.k]+'<span>'+t.l+'</span></button>';
+  });
+  n.innerHTML=h;
+  var bs=n.querySelectorAll('button');
+  for(var i=0;i<bs.length;i++){
+    bs[i].addEventListener('click',function(){setTab(this.getAttribute('data-k'));});
+  }
+}
+
+try{
+  renderNear(); renderRain(); renderBig(); renderWeek(); buildNav(); setTab('near');
+}catch(e){
+  var el=document.getElementById('err');
+  el.style.display='block';
+  el.textContent='Render failed: '+(e&&e.message?e.message:e);
+}
+})();
+</script>
+</body>
+</html>
