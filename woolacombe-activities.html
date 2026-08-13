@@ -924,18 +924,53 @@ function photosPass(){
   } catch (e) {}
 }
 
-/* Hook it onto the existing renderers without touching them. */
-['renderNear','renderRain','renderBig','renderWeek','setTab'].forEach(function(fn){
-  if (typeof window[fn] === 'function') {
-    var orig = window[fn];
-    window[fn] = function(){
-      var r = orig.apply(this, arguments);
-      setTimeout(photosPass, 0);
-      return r;
-    };
+/* The whole file runs inside an IIFE, so these functions are local — wrap them
+   directly rather than via window, which is empty here. */
+var _rn = renderNear, _rr = renderRain, _rb = renderBig, _rw = renderWeek, _st = setTab;
+renderNear = function(){ var r = _rn.apply(this, arguments); setTimeout(photosPass, 0); return r; };
+renderRain = function(){ var r = _rr.apply(this, arguments); setTimeout(photosPass, 0); return r; };
+renderBig  = function(){ var r = _rb.apply(this, arguments); setTimeout(photosPass, 0); return r; };
+renderWeek = function(){ var r = _rw.apply(this, arguments); setTimeout(photosPass, 0); return r; };
+setTab     = function(){ var r = _st.apply(this, arguments); setTimeout(photosPass, 0); return r; };
+
+/* Belt and braces: anything that repaints the list also triggers a pass. */
+try {
+  var _obsTarget = document.body;
+  if (window.MutationObserver && _obsTarget) {
+    var _mo = new MutationObserver(function(){
+      clearTimeout(window.__wpT);
+      window.__wpT = setTimeout(photosPass, 120);
+    });
+    _mo.observe(_obsTarget, { childList: true, subtree: true });
   }
-});
+} catch (e) {}
+
 setTimeout(photosPass, 60);
+setTimeout(photosPass, 800);
+
+/* Tiny status line so photo problems are self-diagnosing. */
+function photoStatus(){
+  try{
+    var el = document.getElementById('photostat');
+    if (!el) {
+      el = document.createElement('div');
+      el.id = 'photostat';
+      el.style.cssText = 'position:fixed;left:8px;bottom:calc(var(--tab, 78px) + 8px);z-index:999;'
+        + 'font:600 11px -apple-system,sans-serif;background:rgba(255,255,255,.94);color:#6f6a5e;'
+        + 'border:1px solid #e5e0d5;border-radius:8px;padding:5px 9px;box-shadow:0 1px 4px rgba(0,0,0,.1)';
+      el.onclick = function(){ this.remove(); };
+      document.body.appendChild(el);
+    }
+    var got = 0, tried = 0;
+    for (var k in GPIC) { tried++; if (GPIC[k]) got++; }
+    el.textContent = !GON
+      ? '📷 No Google key — tap here, then add it in the road trip app'
+      : ('📷 ' + got + ' of ' + tried + ' places have photos' + (picQueue.length ? ' · loading…' : ''));
+    if (got > 0 && !picQueue.length) setTimeout(function(){ if (el) el.remove(); }, 4000);
+  }catch(e){}
+}
+var _pp = photosPass;
+photosPass = function(){ _pp(); photoStatus(); };
 
 </script>
 </body>
