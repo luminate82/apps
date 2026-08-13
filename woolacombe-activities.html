@@ -94,7 +94,7 @@ h2.sec{font-size:13px;font-weight:700;color:var(--sec);letter-spacing:.5px;
 
 /* tab bar */
 nav{position:fixed;left:0;right:0;bottom:0;z-index:50;
-  background:rgba(20,20,22,.86);-webkit-backdrop-filter:blur(22px);backdrop-filter:blur(22px);
+  background:rgba(255,255,255,.9);-webkit-backdrop-filter:saturate(180%) blur(22px);backdrop-filter:saturate(180%) blur(22px);
   border-top:.5px solid var(--sep);display:flex;
   padding:8px calc(6px + env(safe-area-inset-left)) calc(6px + env(safe-area-inset-bottom)) calc(6px + env(safe-area-inset-right))}
 nav button{flex:1;background:none;border:0;color:var(--ter);font-family:inherit;
@@ -297,7 +297,7 @@ M.bee=function(){return base({skyA:'#2a2410',skyB:'#4a4018',sc:'#b45309'})+hills
   +'<circle cx="243" cy="88" r="2.6" fill="'+P.white+'"/>'
   +'<g fill="'+P.white+'" opacity=".55"><ellipse cx="186" cy="66" rx="22" ry="11" transform="rotate(-22 186 66)"/><ellipse cx="214" cy="64" rx="20" ry="10" transform="rotate(18 214 64)"/></g>'
   +'<g fill="'+P.sun+'"><circle cx="70" cy="150" r="7"/><circle cx="330" cy="146" r="7"/></g>'+end();};
-M.coaster=function(){return base({skyA:'#1a1330',skyB:'#33205a',sc:'#e07b1f'})
+M.coaster=function(){return base({skyA:'#4a4470',skyB:'#33205a',sc:'#e07b1f'})
   +'<rect y="152" width="400" height="38" fill="#1e1836"/>'
   +'<path d="M0 150 q40 -104 96 -100 q54 4 66 74 q10 58 62 58 q54 0 66 -66 q10 -54 62 -46 q34 5 48 46" stroke="#20242c" stroke-width="6" fill="none" stroke-linecap="round"/>'
   +'<g stroke="#4a4468" stroke-width="4"><path d="M96 52 v100 M162 124 v28 M224 182 v-30 M290 118 v34 M352 116 v36"/></g>'
@@ -322,7 +322,7 @@ M.gnome=function(){return base({skyA:'#1e2a1c',skyB:'#33502c',sc:'#b45309'})
   +'<g><path d="M96 128 l14 26 l-28 0z" fill="'+P.pink+'"/><rect x="84" y="154" width="24" height="18" rx="6" fill="#3f8f56"/></g>'
   +'<g><path d="M304 132 l13 24 l-26 0z" fill="#7c3aed"/><rect x="293" y="156" width="22" height="16" rx="6" fill="'+P.warm+'"/></g>'
   +'<g fill="'+P.sun+'"><circle cx="140" cy="168" r="5"/><circle cx="264" cy="172" r="5"/></g>'+end();};
-M.bowling=function(){return base({skyA:'#1a1330',skyB:'#2c1c4e',sun:false})
+M.bowling=function(){return base({skyA:'#4a4470',skyB:'#2c1c4e',sun:false})
   +'<rect y="0" width="400" height="190" fill="#241a3c"/>'
   +'<path d="M110 190 L160 44 L240 44 L290 190Z" fill="#8a5a3a"/>'
   +'<path d="M126 190 L168 52 L232 52 L274 190Z" fill="#d8b877"/>'
@@ -376,7 +376,7 @@ M.climb=function(){return base({skyA:'#1c1428',skyB:'#2e2040',sun:false})
   +'<g fill="#0077b6"><circle cx="150" cy="88" r="11"/><path d="M139 100 l22 0 l5 30 l-32 0z"/></g>'
   +'<g stroke="#0077b6" stroke-width="7" stroke-linecap="round"><path d="M142 80 l-4 -22 M160 82 l12 -18 M144 130 l-8 22 M160 130 l14 18"/></g>'
   +'<path d="M150 100 q60 40 40 90" stroke="#b45309" stroke-width="3" fill="none"/>'+end();};
-M.glass=function(){return base({skyA:'#2a1810',skyB:'#4a2610',sun:false})
+M.glass=function(){return base({skyA:'#7a5540',skyB:'#4a2610',sun:false})
   +'<rect y="0" width="400" height="190" fill="#3a1e10"/>'
   +'<circle cx="118" cy="120" r="46" fill="#7a3410"/><circle cx="118" cy="120" r="30" fill="#e07b1f"/><circle cx="118" cy="120" r="16" fill="#b45309"/>'
   +'<path d="M158 118 l112 -14" stroke="#6f6a5e" stroke-width="7" stroke-linecap="round"/>'
@@ -407,7 +407,7 @@ M.craft=function(){return base({skyA:'#20142e',skyB:'#38224e',sun:false})
   +'<g><circle cx="280" cy="102" r="20" fill="#0891b2"/><circle cx="316" cy="110" r="14" fill="#7c3aed"/></g>'
   +'<g fill="#20242c"><rect x="248" y="132" width="10" height="40" rx="5"/><rect x="268" y="136" width="10" height="36" rx="5"/><rect x="288" y="132" width="10" height="40" rx="5"/></g>'
   +'<g fill="#e07b1f"><rect x="246" y="126" width="14" height="10" rx="4"/><rect x="266" y="130" width="14" height="10" rx="4"/><rect x="286" y="126" width="14" height="10" rx="4"/></g>'+end();};
-M.choc=function(){return base({skyA:'#2a1810',skyB:'#43261a',sun:false})
+M.choc=function(){return base({skyA:'#7a5540',skyB:'#43261a',sun:false})
   +'<rect y="0" width="400" height="190" fill="#38221a"/>'
   +'<rect y="128" width="400" height="62" fill="#5a3a28"/>'
   +'<g fill="#7a4a2e"><rect x="112" y="66" width="120" height="72" rx="6"/></g>'
@@ -770,7 +770,6 @@ try{
   el.style.display='block';
   el.textContent='Render failed: '+(e&&e.message?e.message:e);
 }
-})();
 
 /* ============================================================
    GOOGLE PLACES PHOTOS
@@ -1067,8 +1066,7 @@ setTimeout(photosPass, 60);
 setTimeout(photosPass, 800);
 
 /* Tiny status line so photo problems are self-diagnosing. */
-
-
+})();
 
 </script>
 </body>
