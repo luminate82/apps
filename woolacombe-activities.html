@@ -803,23 +803,30 @@ var picQueue = [], picBusy = false, picAsked = {};
 /* Cache Storage keeps the actual image BYTES on the device, so a photo is
    only ever downloaded from Google once. Quota is tens of MB (localStorage
    would be far too small). Falls back to a plain <img> if unavailable. */
-var BUILD = '2026-08-13e';
+var BUILD = '2026-08-13f';
+var PICOK = 0, PICFAIL = 0;
 var IMGCACHE = 'wool-img-v1';
 var canCache = (typeof caches !== 'undefined');
 
 function setSrc(img, url){
-  if (!canCache) { img.src = url; return; }
-  caches.open(IMGCACHE).then(function(c){
-    return c.match(url).then(function(hit){
-      if (hit) return hit.blob();
-      return fetch(url).then(function(res){
-        if (res && res.ok) { try { c.put(url, res.clone()); } catch(e){} }
-        return res.blob();
+  /* Display ALWAYS goes through a plain <img src>. Images aren't subject to
+     CORS for display, whereas fetch() is — and a CORS-blocked fetch can resolve
+     with an empty blob, which silently produced a broken image. Caching is now
+     a background bonus that cannot affect whether the photo appears. */
+  img.src = url;
+  img.addEventListener('error', function(){ PICFAIL++; photoStatus(); }, { once: true });
+  img.addEventListener('load',  function(){ PICOK++;  photoStatus(); }, { once: true });
+  if (!canCache) return;
+  try {
+    caches.open(IMGCACHE).then(function(c){
+      return c.match(url).then(function(hit){
+        if (hit) return;
+        return fetch(url).then(function(res){
+          if (res && res.ok) return c.put(url, res.clone());
+        });
       });
-    });
-  }).then(function(b){
-    img.src = URL.createObjectURL(b);
-  }).catch(function(){ img.src = url; });
+    }).catch(function(){});
+  } catch (e) {}
 }
 
 /* Only the first photo loads up front. The other five are fetched the moment
@@ -1063,7 +1070,8 @@ function photoStatus(){
       box.className = 'pstat';
       if (txt) txt.innerHTML = 'On · key ' + GKEY.slice(0,6) + '…' + GKEY.slice(-4)
         + '<br>' + got + ' of ' + tried + ' places looked up'
-        + (picQueue.length ? ' · ' + picQueue.length + ' loading' : '');
+        + (picQueue.length ? ' · ' + picQueue.length + ' loading' : '')
+        + '<br>images: ' + PICOK + ' shown, ' + PICFAIL + ' failed';
       if (keyb) keyb.textContent = 'Change key';
       if (testb) testb.style.display = '';
     } else {
