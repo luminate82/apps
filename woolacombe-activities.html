@@ -118,6 +118,15 @@ nav svg{width:25px;height:25px;display:block}
   .gdots i{width:6px;height:6px;border-radius:50%;background:rgba(255,255,255,.55);
     box-shadow:0 0 3px rgba(0,0,0,.5);transition:background .2s}
   .gdots i.on{background:#fff}
+  .pstat{background:#fff;border:1px solid var(--sep);border-radius:14px;padding:13px 15px;
+    margin:0 0 14px;font-size:13.5px;color:var(--sec);line-height:1.5;
+    box-shadow:0 1px 4px rgba(60,50,30,.08)}
+  .pstat b{color:var(--label)}
+  .pstat.nokey{background:#fbeedd;border-color:#f0d9b8;color:#9a5b00}
+  .pstat.nokey b{color:#7a4700}
+  .pbtn{display:block;margin-top:10px;background:var(--blue);color:#fff;border:0;
+    border-radius:10px;padding:10px 16px;font:700 14px -apple-system,sans-serif}
+  .pbtn:active{transform:scale(.97)}
 </style>
 </head>
 <body>
@@ -950,36 +959,58 @@ try {
 setTimeout(photosPass, 60);
 setTimeout(photosPass, 800);
 
-/* Tiny status line so photo problems are self-diagnosing. */
+/* Photo status — a proper banner at the top of the visible pane, not a
+   floating pill. Includes key entry so there's no need to switch apps. */
+function keyPrompt(){
+  var v = prompt(
+    "Paste your Google Maps API key to switch photos on.\n\n" +
+    "Saved in this browser only — never in the file or your GitHub repo.\n" +
+    "Leave blank and press OK to remove it.", GKEY || "");
+  if (v === null) return;
+  v = v.trim();
+  try { v ? localStorage.setItem('gmaps-key-v1', v) : localStorage.removeItem('gmaps-key-v1'); } catch(e){}
+  GKEY = v; GON = !!v && v.length > 20;
+  GPIC = {}; picAsked = {}; picQueue = [];
+  try { localStorage.removeItem('wool-photos-v1'); } catch(e){}
+  alert(v ? "Key saved. Photos will start appearing as you scroll."
+          : "Key removed — back to the drawn artwork.");
+  photosPass();
+}
+
 function photoStatus(){
   try{
-    var el = document.getElementById('photostat');
-    if (!el) {
-      el = document.createElement('div');
-      el.id = 'photostat';
-      el.style.cssText = 'position:fixed;left:8px;bottom:calc(var(--tab, 78px) + 8px);z-index:999;'
-        + 'font:600 11px -apple-system,sans-serif;background:rgba(255,255,255,.94);color:#6f6a5e;'
-        + 'border:1px solid #e5e0d5;border-radius:8px;padding:5px 9px;box-shadow:0 1px 4px rgba(0,0,0,.1)';
-      el.onclick = function(){ this.remove(); };
-      document.body.appendChild(el);
-    }
+    var pane = document.querySelector('.pane.on') || document.getElementById('p-near');
+    if (!pane) return;
+    var old = document.getElementById('photostat');
+    if (old && old.parentNode !== pane) { old.remove(); old = null; }
+
     var got = 0, tried = 0;
     for (var k in GPIC) { tried++; if (GPIC[k]) got++; }
-    if (!GON) {
-      el.style.background = '#fbeedd';
-      el.style.color = '#9a5b00';
-      el.textContent = '📷 No Google key yet — photos off. Tap to hide.';
-    } else {
-      el.style.background = 'rgba(255,255,255,.94)';
-      el.style.color = '#6f6a5e';
-      el.textContent = '📷 ' + got + ' of ' + tried + ' looked up'
-        + (picQueue.length ? ' · loading ' + picQueue.length + ' more…' : ' · done');
-      if (got > 0 && !picQueue.length) {
-        setTimeout(function(){ var e2 = document.getElementById('photostat'); if (e2) e2.remove(); }, 5000);
-      }
+
+    /* once photos are in and nothing is pending, take the banner away */
+    if (GON && got > 0 && !picQueue.length) { if (old) old.remove(); return; }
+
+    if (!old) {
+      old = document.createElement('div');
+      old.id = 'photostat';
+      pane.insertBefore(old, pane.firstChild);
     }
+    old.className = 'pstat' + (GON ? '' : ' nokey');
+    old.innerHTML = GON
+      ? '<b>📷 Loading photos…</b> ' + got + ' of ' + tried + ' found'
+        + (picQueue.length ? ' · ' + picQueue.length + ' to go' : '')
+      : '<b>📷 Photos are off</b><br>Add a Google Maps key and every activity gets real photographs instead of the drawn artwork.'
+        + '<button class="pbtn" id="pkeybtn">Add key</button>';
+    var b = document.getElementById('pkeybtn');
+    if (b) b.onclick = keyPrompt;
   }catch(e){}
 }
+
+setTimeout(photosPass, 60);
+setTimeout(photosPass, 800);
+
+/* Tiny status line so photo problems are self-diagnosing. */
+
 
 
 </script>
