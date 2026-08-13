@@ -853,6 +853,7 @@ function paintPhotos(){
       el.appendChild(wrap);
     });
   } catch (e) {}
+  try { photoStatus(); } catch (e) {}
 }
 function syncDots(wrap){
   try{
@@ -922,6 +923,7 @@ function photosPass(){
     });
     if (picQueue.length) drainPics();
   } catch (e) {}
+  try { photoStatus(); } catch (e) {}
 }
 
 /* The whole file runs inside an IIFE, so these functions are local — wrap them
@@ -963,14 +965,22 @@ function photoStatus(){
     }
     var got = 0, tried = 0;
     for (var k in GPIC) { tried++; if (GPIC[k]) got++; }
-    el.textContent = !GON
-      ? '📷 No Google key — tap here, then add it in the road trip app'
-      : ('📷 ' + got + ' of ' + tried + ' places have photos' + (picQueue.length ? ' · loading…' : ''));
-    if (got > 0 && !picQueue.length) setTimeout(function(){ if (el) el.remove(); }, 4000);
+    if (!GON) {
+      el.style.background = '#fbeedd';
+      el.style.color = '#9a5b00';
+      el.textContent = '📷 No Google key yet — photos off. Tap to hide.';
+    } else {
+      el.style.background = 'rgba(255,255,255,.94)';
+      el.style.color = '#6f6a5e';
+      el.textContent = '📷 ' + got + ' of ' + tried + ' looked up'
+        + (picQueue.length ? ' · loading ' + picQueue.length + ' more…' : ' · done');
+      if (got > 0 && !picQueue.length) {
+        setTimeout(function(){ var e2 = document.getElementById('photostat'); if (e2) e2.remove(); }, 5000);
+      }
+    }
   }catch(e){}
 }
-var _pp = photosPass;
-photosPass = function(){ _pp(); photoStatus(); };
+
 
 </script>
 </body>
