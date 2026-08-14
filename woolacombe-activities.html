@@ -49,7 +49,6 @@ main{padding:4px calc(16px + env(safe-area-inset-left)) 28px calc(16px + env(saf
 .card{background:var(--card);border-radius:18px;overflow:hidden;margin-bottom:14px}
 .art{display:block;width:100%;height:auto;background:#0d1b26;position:relative}
 .art svg{display:block;width:100%;height:auto}
-.art img.photo{position:absolute;left:0;top:0;width:100%;height:100%;object-fit:cover;z-index:2;display:block}
 .credit{position:absolute;right:7px;bottom:6px;z-index:3;font-size:9.5px;color:rgba(255,255,255,.82);
   background:rgba(0,0,0,.45);padding:2px 6px;border-radius:6px;letter-spacing:.2px}
 .body{padding:14px 15px 15px}
@@ -107,54 +106,17 @@ nav svg{width:25px;height:25px;display:block}
 #err{display:none;padding:20px;font:12px/1.5 ui-monospace,monospace;color:#c0392b;
   white-space:pre-wrap;word-break:break-word}
   .art{position:relative}
-  .art img.photo{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
-  .gcar{position:absolute;inset:0;z-index:2}
-  .gstrip{display:flex;height:100%;overflow-x:auto;scroll-snap-type:x mandatory;
-    -webkit-overflow-scrolling:touch;scrollbar-width:none}
-  .gstrip::-webkit-scrollbar{display:none}
-  .gstrip img{flex:0 0 100%;width:100%;height:100%;object-fit:cover;scroll-snap-align:center}
-  .gdots{position:absolute;left:0;right:0;bottom:7px;display:flex;justify-content:center;gap:5px;
-    pointer-events:none}
-  .gdots i{width:6px;height:6px;border-radius:50%;background:rgba(255,255,255,.55);
-    box-shadow:0 0 3px rgba(0,0,0,.5);transition:background .2s}
-  .gdots i.on{background:#fff}
-  main{display:block}
-  #photostat{margin:12px 16px 0}
-  .pstat{background:#fff;border:1px solid var(--sep);border-radius:14px;padding:13px 15px;
-    margin:0 0 14px;font-size:13.5px;color:var(--sec);line-height:1.5;
-    box-shadow:0 1px 4px rgba(60,50,30,.08)}
-  .pstat b{color:var(--label)}
-  .pstat.nokey{background:#fbeedd;border-color:#f0d9b8;color:#9a5b00}
-  .pstat.nokey b{color:#7a4700}
-  .pbtn{display:block;margin-top:10px;background:var(--blue);color:#fff;border:0;
-    border-radius:10px;padding:10px 16px;font:700 14px -apple-system,sans-serif}
-  .pbtn:active{transform:scale(.97)}
+  .slot{display:flex;gap:12px;align-items:flex-start;padding:10px 0;border-top:1px solid var(--sep)}
+  .stime{flex:none;width:52px;font:800 14px -apple-system,sans-serif;color:var(--blue);padding-top:1px}
+  .sbody{flex:1;min-width:0}
+  .sname{font-weight:700;font-size:15px;letter-spacing:-.2px}
+  .smeta{font-size:12.5px;color:var(--sec);margin-top:2px}
+  .swarn{font-size:12.5px;color:#9a5b00;background:#fbeedd;border-radius:8px;padding:7px 9px;margin-top:6px;line-height:1.4}
 </style>
 </head>
 <body>
 
 <div id="err"></div>
-<div id="photostat" class="pstat nokey">
-  <b>📷 Photos</b><br>
-  <span id="pstxt">Checking for a Google Maps key…</span>
-  <div style="display:flex;gap:8px;flex-wrap:wrap">
-    <button class="pbtn" id="pkeybtn">Add key</button>
-    <button class="pbtn" id="ptestbtn" style="background:#f0ece3;color:#20242c;display:none">Test key</button>
-  </div>
-  <div id="pkeyrow" style="display:none;margin-top:10px">
-    <input id="pkeyin" type="text" inputmode="text" autocapitalize="off" autocorrect="off"
-           spellcheck="false" placeholder="Paste your Google Maps key"
-           style="width:100%;padding:11px 12px;border:1px solid var(--sep);border-radius:10px;
-                  font:15px -apple-system,sans-serif;background:#fff;color:var(--label);-webkit-appearance:none">
-    <div style="display:flex;gap:8px;margin-top:8px">
-      <button class="pbtn" id="pkeysave">Save</button>
-      <button class="pbtn" id="pkeyclear" style="background:#f0ece3;color:#20242c">Remove key</button>
-      <button class="pbtn" id="pkeycancel" style="background:#f0ece3;color:#20242c">Cancel</button>
-    </div>
-  </div>
-  <div id="ptest" style="margin-top:8px;font-size:12.5px;line-height:1.45"></div>
-  <div id="pbuild" style="margin-top:8px;font-size:10px;opacity:.65"></div>
-</div>
 <header><h1 id="ttl">Near the park</h1><div class="sub" id="sb">Loading…</div></header>
 <main>
   <div class="pane on" id="p-near"></div>
@@ -600,16 +562,10 @@ var picsUrl=function(n){return 'https://www.google.com/search?tbm=isch&q='+encod
 var toneLabel={calm:'Calm',mixed:'Mixed',loud:'Loud'};
 var indLabel={0:'Outdoor',1:'Indoor',2:'Indoor + out'};
 
-/* Drop a photo at img/<slug>.jpg and it replaces the illustration automatically.
-   Nothing is required — a missing file simply leaves the drawing in place.
-   Add a line to CREDITS to show an attribution caption over the photo. */
+/* Illustrations only — no photos, no API keys, no network calls. */
 function slug(n){
   return n.toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-+|-+$/g,'');
 }
-var CREDITS={
-  /* "the-big-sheep": "© The BIG Sheep" */
-};
-
 function dist(x){
   if(x.walk) return x.min+' min walk';
   return x.min+' min drive';
@@ -618,11 +574,7 @@ function card(x){
   var sl=slug(x.n);
   var t='';
   t+='<div class="card">';
-  t+='<div class="art" data-slug="'+sl+'">'+art(x.sc);
-  t+='<img class="photo" loading="lazy" alt="" src="img/'+sl+'.jpg" '
-    +'onerror="this.parentNode.querySelectorAll(\'.credit\').forEach(function(c){c.remove()});this.remove();">';
-  if(CREDITS[sl]) t+='<span class="credit">'+CREDITS[sl]+'</span>';
-  t+='</div>';
+  t+='<div class="art">'+art(x.sc)+'</div>';
   t+='<div class="body">';
   t+='<div class="ttl">'+x.n+'</div>';
   t+='<div class="tags">';
@@ -700,36 +652,60 @@ function renderBig(){
 }
 
 var WEEK=[
- {d:"Sat 15 Aug",t:"Arrive",book:null,col:"var(--ter)",
-  s:"Travel day. Nothing booked \u2014 <b>South Street Food</b> or the <b>Mortehoe chip hatch</b> for dinner rather than a restaurant."},
- {d:"Sun 16 Aug",t:"Booked",book:"Bungee Trampoline",col:"var(--green)",
-  s:"On-park in the morning. Keep the afternoon light \u2014 <b>Funder Island</b> is a six-minute walk."},
- {d:"Mon 17 Aug",t:"Open",book:null,col:"var(--blue)",
+ {d:"Sat 15 Aug",t:"Arrive",col:"var(--ter)",ev:[],
+  s:"Travel day, in around 16:00. Nothing booked \u2014 <b>South Street Food</b> or the <b>Mortehoe chip hatch</b> rather than a restaurant."},
+ {d:"Sun 16 Aug",t:"2 booked",col:"var(--green)",
+  ev:[{tm:"16:40",n:"Bungee Trampoline",wh:"Woolacombe Bay",who:"1 \u00d7 5+ years",px:"\u00a37"},
+      {tm:"16:50",n:"Bungee Trampoline",wh:"Woolacombe Bay",who:"1 \u00d7 5+ years",px:"\u00a37"}],
+  s:"Back-to-back bungee slots late afternoon \u2014 <b>be there by 16:30</b>. Morning free. \u2728 <b>Pok\u00e9mon GO Community Day 14:00\u201317:00</b> \u2014 do it on the seafront beforehand."},
+ {d:"Mon 17 Aug",t:"Free",col:"var(--blue)",ev:[],
   s:"Good day for a <b>big one</b> \u2014 Big Sheep or Combe Martin, both under 45 mins. Start at 10 when gates open."},
- {d:"Tue 18 Aug",t:"Open",book:null,col:"var(--blue)",
+ {d:"Tue 18 Aug",t:"Free",col:"var(--blue)",ev:[],
   s:"Barnstaple cluster: <b>Air Extreme</b> and <b>Let's Go Bowling</b> are a mile apart, cinema in town if you need a third."},
- {d:"Wed 19 Aug",t:"Booked",book:"Crazi Bugz",col:"var(--green)",
-  s:"On-park. <b>Waves Creative Cafe</b> at Golden Coast is six minutes away and completely unhurried \u2014 good afternoon landing."},
- {d:"Thu 20 Aug",t:"Open",book:null,col:"var(--blue)",
-  s:"The long one if you're doing it \u2014 <b>Milky Way</b> (65 min), or <b>Skern Adventure</b> (50 min) if Theo wants high ropes."},
- {d:"Fri 21 Aug",t:"Open",book:null,col:"var(--blue)",
-  s:"Book a <b>surf lesson</b>, the <b>riding stables</b> or a <b>chocolate masterclass</b> for the last full day. All need advance booking."},
- {d:"Sat 22 Aug",t:"Home",book:null,col:"var(--ter)",
-  s:"Leave early. <b>McDonald's at Roundswell</b> is on the A361 out if you need a stop."}
+ {d:"Wed 19 Aug",t:"3 booked",col:"var(--green)",
+  ev:[{tm:"11:00",n:"Crazi Bugz",wh:"Woolacombe Bay",who:"2 \u00d7 5\u201311 years",px:"\u00a318"},
+      {tm:"14:20",n:"Climbing Wall",wh:"Woolacombe Bay",who:"1 \u00d7 5+ years",px:"\u00a37"},
+      {tm:"14:30",n:"Climbing Wall",wh:"Woolacombe Bay",who:"1 \u00d7 5+ years",px:"\u00a37"}],
+  s:"Busiest day, all on-park. Gap between 11:45 and 14:00 \u2014 lunch or a beach run. <b>Waves Creative Cafe</b> six minutes away for late afternoon."},
+ {d:"Thu 20 Aug",t:"3 booked",col:"var(--green)",
+  ev:[{tm:"10:00",n:"Wavesurfer",wh:"Twitchen House",who:"1 \u00d7 8+ years",px:"\u00a330",warn:"Arrive at the <b>Wavebar by 09:30</b> \u2014 paperwork and wetsuit fitting"},
+      {tm:"13:30",n:"Den Building",wh:"Twitchen House",who:"2 \u00d7 5+ years",px:"\u00a314"},
+      {tm:"15:30",n:"Survival Bracelets",wh:"Twitchen House",who:"1 \u00d7 5+ years",px:"\u00a39"}],
+  s:"<b>Whole day at Twitchen House</b> \u2014 Mortehoe Station Road, a different park from where you\u2019re staying. Three activities spread 10:00\u201316:00, so stay put rather than shuttle back."},
+ {d:"Fri 21 Aug",t:"Free",col:"var(--blue)",ev:[],
+  s:"Last full day. Keep it local \u2014 <b>Baggy Point</b> walk, rock pools, or the beach if the tide\u2019s right. Pack in the evening."},
+ {d:"Sat 22 Aug",t:"Home",col:"var(--ter)",ev:[],
+  s:"Departure. Leave early to beat the Saturday changeover traffic on the A361 and M5."}
 ];
 function renderWeek(){
   var el=document.getElementById('p-week');
+  var slots=0, spend=0;
+  WEEK.forEach(function(w){
+    slots+=w.ev.length;
+    w.ev.forEach(function(e){ spend+=parseFloat(String(e.px).replace(/[^0-9.]/g,''))||0; });
+  });
   var h='<div class="status"><div class="statrow">'
    +'<div class="stat"><b>8</b><span>DAYS</span></div>'
-   +'<div class="stat"><b>2</b><span>BOOKED</span></div>'
-   +'<div class="stat"><b>5</b><span>FREE DAYS</span></div>'
+   +'<div class="stat"><b>'+slots+'</b><span>BOOKED</span></div>'
+   +'<div class="stat"><b>\u00a3'+spend+'</b><span>PREPAID</span></div>'
+   +'<div class="stat"><b>3</b><span>FREE DAYS</span></div>'
    +'</div></div>';
-  h+='<h2 class="sec">15–22 August 2026</h2>';
+  h+='<h2 class="sec">15\u201322 August 2026</h2>';
   WEEK.forEach(function(w){
     h+='<div class="day"><div class="dhead"><b>'+w.d+'</b><span>'+w.t+'</span></div>';
-    if(w.book) h+='<div class="dbook"><span class="dot" style="background:'+w.col+'"></span>'+w.book+'</div>';
+    w.ev.forEach(function(e){
+      h+='<div class="slot">'
+        +'<div class="stime">'+e.tm+'</div>'
+        +'<div class="sbody"><div class="sname">'+e.n+'</div>'
+        +'<div class="smeta">'+e.wh+' \u00b7 '+e.who+' \u00b7 '+e.px+'</div>'
+        +(e.warn?'<div class="swarn">\u26a0\ufe0f '+e.warn+'</div>':'')
+        +'</div></div>';
+    });
     h+='<div class="dsug">'+w.s+'</div></div>';
   });
+  h+='<div class="day"><div class="dhead"><b>All booked through</b><span>Roller</span></div>'
+   +'<div class="dsug">Amendable up to <b>48 hours before</b> each activity via the Manage Booking link in your confirmation email. '
+   +'Refs <b>#170884927</b>, <b>#170884972</b>, <b>#171103447</b>. Park office 01271 872322.</div></div>';
   h+='<div class="day"><div class="dhead"><b>Worth booking now</b><span>August</span></div>'
    +'<div class="dsug">Riding stables, surf lessons and any sit-down dinner need advance booking in peak week. '
    +'Everything tagged <b>Verify first</b> in the other tabs should be phoned or checked online before you drive.</div></div>';
@@ -782,341 +758,6 @@ try{
   el.textContent='Render failed: '+(e&&e.message?e.message:e);
 }
 
-/* ============================================================
-   GOOGLE PLACES PHOTOS
-   Uses the SAME key you saved in the road trip app (localStorage
-   "gmaps-key-v1"), so there is nothing extra to set up. No key,
-   no network, or a failed lookup — the drawn artwork simply stays.
-   Photos come from Google's licensed Places API, not scraped from
-   anyone's website.
-   ============================================================ */
-var GKEY = "";
-try { GKEY = localStorage.getItem("gmaps-key-v1") || ""; } catch (e) {}
-var GON = !!GKEY && GKEY.length > 20;
-
-var GPIC = {};
-try { GPIC = JSON.parse(localStorage.getItem("wool-photos-v1") || "{}"); } catch (e) {}
-function savePics(){ try { localStorage.setItem("wool-photos-v1", JSON.stringify(GPIC)); } catch (e) {} }
-
-var picQueue = [], picBusy = false, picAsked = {};
-
-/* Cache Storage keeps the actual image BYTES on the device, so a photo is
-   only ever downloaded from Google once. Quota is tens of MB (localStorage
-   would be far too small). Falls back to a plain <img> if unavailable. */
-var BUILD = '2026-08-13g';
-var PICOK = 0, PICFAIL = 0;
-var IMGCACHE = 'wool-img-v1';
-var canCache = (typeof caches !== 'undefined');
-
-function setSrc(img, url){
-  /* Display ALWAYS goes through a plain <img src>. Images aren't subject to
-     CORS for display, whereas fetch() is — and a CORS-blocked fetch can resolve
-     with an empty blob, which silently produced a broken image. Caching is now
-     a background bonus that cannot affect whether the photo appears. */
-  img.src = url;
-  if (!window.__picUrl) window.__picUrl = url;
-  img.addEventListener('error', function(){
-    PICFAIL++;
-    if (!window.__picDiag) {          /* on the FIRST failure, ask Google why */
-      window.__picDiag = 'checking…';
-      fetch(url).then(function(r){
-        return r.text().then(function(t){
-          var msg = t;
-          try { var j = JSON.parse(t); msg = (j.error && (j.error.message || j.error.status)) || t; } catch(e){}
-          window.__picDiag = 'HTTP ' + r.status + ' — ' + String(msg).slice(0, 220);
-          photoStatus();
-        });
-      }).catch(function(e){
-        window.__picDiag = 'request blocked before reaching Google (' + e.message + ')';
-        photoStatus();
-      });
-    }
-    photoStatus();
-  }, { once: true });
-  img.addEventListener('load',  function(){ PICOK++;  photoStatus(); }, { once: true });
-  if (!canCache) return;
-  try {
-    caches.open(IMGCACHE).then(function(c){
-      return c.match(url).then(function(hit){
-        if (hit) return;
-        return fetch(url).then(function(res){
-          if (res && res.ok) return c.put(url, res.clone());
-        });
-      });
-    }).catch(function(){});
-  } catch (e) {}
-}
-
-/* Only the first photo loads up front. The other five are fetched the moment
-   you actually swipe — so cards you never touch cost one photo, not six. */
-function expandStrip(strip, urls){
-  if (strip.getAttribute('data-full')) return;
-  strip.setAttribute('data-full','1');
-  for (var i = 1; i < urls.length; i++) {
-    var im = document.createElement('img');
-    im.decoding = 'async'; im.alt = '';
-    im.onerror = function(){ this.remove(); };
-    setSrc(im, urls[i]);
-    strip.appendChild(im);
-  }
-}
-
-function paintPhotos(){
-  try {
-    var arts = document.querySelectorAll('.art[data-slug]');
-    Array.prototype.forEach.call(arts, function(el){
-      var sl = el.getAttribute('data-slug');
-      var urls = GPIC[sl];
-      if (!urls || !urls.length || el.querySelector('.gcar')) return;
-
-      var wrap = document.createElement('div');
-      wrap.className = 'gcar';
-
-      var strip = document.createElement('div');
-      strip.className = 'gstrip';
-      var first = document.createElement('img');
-      first.decoding = 'async'; first.alt = '';
-      first.onerror = function(){
-        var s = this.parentNode; this.remove();
-        if (s && !s.querySelector('img')) { var w = s.parentNode; if (w) w.remove(); }
-        syncDots(wrap);
-      };
-      setSrc(first, urls[0]);
-      strip.appendChild(first);
-      if (urls.length > 1) {
-        var grow = function(){ expandStrip(strip, urls); };
-        strip.addEventListener('touchstart', grow, { passive: true, once: true });
-        strip.addEventListener('mouseenter', grow, { once: true });
-        strip.addEventListener('scroll', grow, { passive: true, once: true });
-      }
-      wrap.appendChild(strip);
-
-      if (urls.length > 1) {
-        var dots = document.createElement('div');
-        dots.className = 'gdots';
-        urls.forEach(function(_, i){
-          var d = document.createElement('i');
-          if (!i) d.className = 'on';
-          dots.appendChild(d);
-        });
-        wrap.appendChild(dots);
-        strip.addEventListener('scroll', function(){
-          var w = strip.clientWidth || 1;
-          var idx = Math.round(strip.scrollLeft / w);
-          var ds = dots.querySelectorAll('i');
-          for (var i = 0; i < ds.length; i++) ds[i].className = (i === idx ? 'on' : '');
-        }, { passive: true });
-      }
-      el.appendChild(wrap);
-    });
-  } catch (e) {}
-  try { photoStatus(); } catch (e) {}
-}
-function syncDots(wrap){
-  try{
-    var n = wrap.querySelectorAll('.gstrip img').length;
-    var d = wrap.querySelector('.gdots');
-    if (d && n < 2) d.remove();
-  }catch(e){}
-}
-
-function fetchPic(name, sl){
-  return fetch('https://places.googleapis.com/v1/places:searchText', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'X-Goog-Api-Key': GKEY,
-      'X-Goog-FieldMask': 'places.photos,places.displayName'
-    },
-    body: JSON.stringify({ textQuery: name + ', North Devon, UK', maxResultCount: 1 })
-  }).then(function(r){
-    if (!r.ok) throw new Error(r.status);
-    return r.json();
-  }).then(function(j){
-    var ph = (j.places && j.places[0] && j.places[0].photos) || [];
-    var urls = ph.slice(0, 6).map(function(x){
-      return 'https://places.googleapis.com/v1/' + x.name + '/media?maxWidthPx=600&key=' + GKEY;
-    });
-    GPIC[sl] = urls.length ? urls : null;
-    savePics();
-  }).catch(function(){ GPIC[sl] = null; savePics(); });
-}
-
-function drainPics(){
-  if (picBusy || !GON) return;
-  picBusy = true;
-  var landed = false;
-  function next(){
-    if (!picQueue.length) {
-      picBusy = false;
-      if (landed) paintPhotos();
-      return;
-    }
-    var job = picQueue.shift();
-    fetchPic(job.n, job.sl).then(function(){
-      if (GPIC[job.sl]) landed = true;
-      setTimeout(next, 250);           /* gentle on the quota */
-    });
-  }
-  next();
-}
-
-/* Called after every render: paint what we have, queue what's visible. */
-function photosPass(){
-  paintPhotos();
-  if (!GON) return;
-  try {
-    var arts = document.querySelectorAll('.art[data-slug]');
-    var added = 0;
-    Array.prototype.forEach.call(arts, function(el){
-      if (added >= 8) return;
-      var sl = el.getAttribute('data-slug');
-      if (picAsked[sl] || GPIC[sl] !== undefined) return;
-      var t = el.parentNode.querySelector('.ttl');
-      if (!t) return;
-      picAsked[sl] = 1;
-      picQueue.push({ n: t.textContent, sl: sl });
-      added++;
-    });
-    if (picQueue.length) drainPics();
-  } catch (e) {}
-  try { photoStatus(); } catch (e) {}
-}
-
-/* The whole file runs inside an IIFE, so these functions are local — wrap them
-   directly rather than via window, which is empty here. */
-var _rn = renderNear, _rr = renderRain, _rb = renderBig, _rw = renderWeek, _st = setTab;
-renderNear = function(){ var r = _rn.apply(this, arguments); setTimeout(photosPass, 0); return r; };
-renderRain = function(){ var r = _rr.apply(this, arguments); setTimeout(photosPass, 0); return r; };
-renderBig  = function(){ var r = _rb.apply(this, arguments); setTimeout(photosPass, 0); return r; };
-renderWeek = function(){ var r = _rw.apply(this, arguments); setTimeout(photosPass, 0); return r; };
-setTab     = function(){ var r = _st.apply(this, arguments); setTimeout(photosPass, 0); return r; };
-
-/* Belt and braces: anything that repaints the list also triggers a pass. */
-try {
-  var _obsTarget = document.body;
-  if (window.MutationObserver && _obsTarget) {
-    var _mo = new MutationObserver(function(){
-      clearTimeout(window.__wpT);
-      window.__wpT = setTimeout(photosPass, 120);
-    });
-    _mo.observe(_obsTarget, { childList: true, subtree: true });
-  }
-} catch (e) {}
-
-photoStatus();                 /* paint the banner before anything else happens */
-setTimeout(photosPass, 60);
-setTimeout(photosPass, 800);
-
-/* Photo status — a proper banner at the top of the visible pane, not a
-   floating pill. Includes key entry so there's no need to switch apps. */
-function applyKey(v){
-  v = (v || '').trim();
-  try { v ? localStorage.setItem('gmaps-key-v1', v) : localStorage.removeItem('gmaps-key-v1'); } catch(e){}
-  GKEY = v; GON = !!v && v.length > 20;
-  GPIC = {}; picAsked = {}; picQueue = [];
-  try { localStorage.removeItem('wool-photos-v1'); } catch(e){}
-  var row = document.getElementById('pkeyrow'); if (row) row.style.display = 'none';
-  var t = document.getElementById('ptest');
-  if (t) t.innerHTML = v ? '<b>Key saved.</b> Photos will appear as you scroll.'
-                         : '<b>Key removed.</b> Back to the drawn artwork.';
-  photosPass();
-}
-function keyPrompt(){
-  /* No prompt() — iOS blocks it in Home Screen web apps. Inline field instead. */
-  var row = document.getElementById('pkeyrow');
-  var inp = document.getElementById('pkeyin');
-  if (!row || !inp) return;
-  var showing = row.style.display !== 'none';
-  row.style.display = showing ? 'none' : 'block';
-  if (!showing) { inp.value = GKEY || ''; try { inp.focus(); } catch(e){} }
-}
-
-function explainG(status, body){
-  var b = (body || '').slice(0, 300);
-  if (status === 403 && /referer|referrer|API_KEY_HTTP_REFERRER/i.test(b))
-    return 'Your key is locked to a different website. Add <b>' + location.origin + '/*</b> to the key\'s Website restrictions.';
-  if (status === 403 && /not enabled|SERVICE_DISABLED|disabled/i.test(b))
-    return 'The <b>Places API</b> is not switched on for this key. Enable it in the Maps API Library.';
-  if (status === 403) return 'Key rejected — usually the Places API is off, or the website restriction excludes this address.';
-  if (status === 429 || /RESOURCE_EXHAUSTED|quota/i.test(b))
-    return 'Daily quota reached. That is your spending cap working — it resets tomorrow.';
-  if (status === 400) return 'Request refused — the key may be mistyped or have a stray space.';
-  return 'Unexpected response (' + status + ').';
-}
-
-function testKey(){
-  var out = document.getElementById('ptest');
-  if (!out) return;
-  if (!GON) { out.innerHTML = '<b>No key installed.</b> Tap “Add key” first.'; return; }
-  out.innerHTML = 'Testing…';
-  fetch('https://places.googleapis.com/v1/places:searchText', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'X-Goog-Api-Key': GKEY,
-      'X-Goog-FieldMask': 'places.photos,places.displayName'
-    },
-    body: JSON.stringify({ textQuery: 'Exmoor Zoo, North Devon, UK', maxResultCount: 1 })
-  }).then(function(r){
-    return r.text().then(function(t){ return { ok: r.ok, status: r.status, t: t }; });
-  }).then(function(r){
-    if (!r.ok) { out.innerHTML = '<b>❌ Failed (' + r.status + ')</b><br>' + explainG(r.status, r.t); return; }
-    var j = JSON.parse(r.t);
-    var p = j.places && j.places[0];
-    var n = (p && p.photos) ? p.photos.length : 0;
-    out.innerHTML = '<b>✅ Working.</b> Found “' + (p ? p.displayName.text : '?') + '” with ' + n +
-      ' photo' + (n === 1 ? '' : 's') + '. Scroll and they will fill in.';
-  }).catch(function(){
-    out.innerHTML = '<b>❌ Could not reach Google.</b> No signal, or the request was blocked.';
-  });
-}
-
-function photoStatus(){
-  try{
-    var box = document.getElementById('photostat');
-    if (!box) return;
-    var txt = document.getElementById('pstxt');
-    var keyb = document.getElementById('pkeybtn');
-    var testb = document.getElementById('ptestbtn');
-    var bld = document.getElementById('pbuild');
-
-    var got = 0, tried = 0;
-    for (var k in GPIC) { tried++; if (GPIC[k]) got++; }
-
-    if (GON) {
-      box.className = 'pstat';
-      if (txt) txt.innerHTML = 'On · key ' + GKEY.slice(0,6) + '…' + GKEY.slice(-4)
-        + '<br>' + got + ' of ' + tried + ' places looked up'
-        + (picQueue.length ? ' · ' + picQueue.length + ' loading' : '')
-        + '<br>images: ' + PICOK + ' shown, ' + PICFAIL + ' failed'
-        + (window.__picDiag ? '<br><span style="color:#9a5b00">why: ' + String(window.__picDiag).replace(/</g,'&lt;') + '</span>' : '')
-        + (PICFAIL ? '<br><span style="font-size:11px;opacity:.8">first URL: ' + String(window.__picUrl||'').replace(/key=[^&]*/,'key=…').slice(0,110) + '</span>' : '');
-      if (keyb) keyb.textContent = 'Change key';
-      if (testb) testb.style.display = '';
-    } else {
-      box.className = 'pstat nokey';
-      if (txt) txt.textContent = 'Off — add a Google Maps key and every activity gets real photographs instead of the drawn artwork.';
-      if (keyb) keyb.textContent = 'Add key';
-      if (testb) testb.style.display = 'none';
-    }
-    if (bld) bld.textContent = 'build ' + BUILD + ' · this page: ' + location.origin + '/*';
-    if (keyb) keyb.onclick = keyPrompt;
-    if (testb) testb.onclick = testKey;
-    var sv = document.getElementById('pkeysave');
-    var cl = document.getElementById('pkeyclear');
-    var cn = document.getElementById('pkeycancel');
-    if (sv) sv.onclick = function(){ applyKey((document.getElementById('pkeyin')||{}).value); };
-    if (cl) cl.onclick = function(){ applyKey(''); };
-    if (cn) cn.onclick = function(){ var r=document.getElementById('pkeyrow'); if(r) r.style.display='none'; };
-  }catch(e){}
-}
-
-photoStatus();                 /* paint the banner before anything else happens */
-setTimeout(photosPass, 60);
-setTimeout(photosPass, 800);
-
-/* Tiny status line so photo problems are self-diagnosing. */
 })();
 
 </script>
